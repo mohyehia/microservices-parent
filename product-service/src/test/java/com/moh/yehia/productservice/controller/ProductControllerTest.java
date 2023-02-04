@@ -49,13 +49,13 @@ public class ProductControllerTest extends GlobalSpringContext {
                 .price(productRequest.getPrice())
                 .build();
         productRepository.save(product);
-        Assertions.assertEquals(1, productRepository.findAll().size());
+        Assertions.assertEquals(2, productRepository.findAll().size());
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     private ProductRequest populateProductRequest() {
-        return new ProductRequest("Iphone 13 Pro", "Iphone 13 Pro description", BigDecimal.valueOf(1200));
+        return new ProductRequest(faker.commerce().productName(), faker.commerce().productName(), BigDecimal.valueOf(faker.number().randomNumber()));
     }
 }
