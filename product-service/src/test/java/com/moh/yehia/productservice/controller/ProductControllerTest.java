@@ -2,45 +2,28 @@ package com.moh.yehia.productservice.controller;
 
 import com.moh.yehia.productservice.model.entity.Product;
 import com.moh.yehia.productservice.model.request.ProductRequest;
-import com.moh.yehia.productservice.repository.ProductRepository;
+import com.moh.yehia.productservice.model.response.ProductResponse;
+import com.moh.yehia.productservice.service.design.ProductService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 public class ProductControllerTest extends GlobalSpringContext {
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
-
     @Autowired
-    private ProductRepository productRepository;
-
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry) {
-        dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
+    private ProductService productService;
 
     @Test
     void shouldCreateProduct() throws Exception {
-        ProductRequest productRequest = populateProductRequest();
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/products")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(productRequest)))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
-        Assertions.assertEquals(1, productRepository.findAll().size());
-    }
-
-    @Test
-    void shouldReturnProducts() throws Exception {
         ProductRequest productRequest = populateProductRequest();
         Product product = Product
                 .builder()
@@ -48,14 +31,46 @@ public class ProductControllerTest extends GlobalSpringContext {
                 .description(productRequest.getDescription())
                 .price(productRequest.getPrice())
                 .build();
-        productRepository.save(product);
-        Assertions.assertEquals(2, productRepository.findAll().size());
+        BDDMockito.given(productService.save(Mockito.any(ProductRequest.class))).willReturn(product);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(productRequest)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isCreated());
+        Assertions.assertEquals(1, productService.retrieveProducts().size());
+    }
+
+    @Test
+    void shouldReturnProducts() throws Exception {
+        Product product1 = populateProductEntity();
+        Product product2 = populateProductEntity();
+        BDDMockito.given(productService.retrieveProducts()).willReturn(Arrays.asList(mapToProductResponse(product1), mapToProductResponse(product2)));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     private ProductRequest populateProductRequest() {
         return new ProductRequest(faker.commerce().productName(), faker.commerce().productName(), BigDecimal.valueOf(faker.number().randomNumber()));
+    }
+
+    private Product populateProductEntity() {
+        return Product
+                .builder()
+                .name(faker.commerce().productName())
+                .description(faker.commerce().productName())
+                .price(BigDecimal.valueOf(faker.number().randomNumber()))
+                .build();
+    }
+
+    private ProductResponse mapToProductResponse(Product product) {
+        return ProductResponse
+                .builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .build();
     }
 }
