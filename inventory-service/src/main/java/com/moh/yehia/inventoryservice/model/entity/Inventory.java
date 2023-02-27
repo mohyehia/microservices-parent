@@ -10,9 +10,12 @@ import javax.persistence.*;
 public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "ID")
     private long id;
 
+    @Column(name = "SKU_CODE")
     private String skuCode;
 
+    @Column(name = "QUANTITY")
     private int quantity;
 }
