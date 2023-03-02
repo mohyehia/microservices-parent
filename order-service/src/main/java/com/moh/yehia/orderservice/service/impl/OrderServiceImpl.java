@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     @Override
     public void save(OrderRequest orderRequest) {
@@ -33,12 +33,12 @@ public class OrderServiceImpl implements OrderService {
 
         List<String> productCodes = orderItems.stream().map(OrderItem::getProductCode).collect(Collectors.toList());
 
-        InventoryResponse[] inventoryResponses = webClient.get()
-                .uri("http://localhost:9092/api/v1/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", productCodes).build())
+        InventoryResponse[] inventoryResponses = webClientBuilder.build().get()
+                .uri("lb://inventory-service/api/v1/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", productCodes).build())
                 .retrieve()
                 .bodyToMono(InventoryResponse[].class)
                 .block();
-        if (inventoryResponses == null || inventoryResponses.length == 0){
+        if (inventoryResponses == null || inventoryResponses.length == 0) {
             throw new IllegalArgumentException("Some products are not in stock, please try again later!");
         }
         boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isProductInStock);
