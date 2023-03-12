@@ -1,4 +1,6 @@
 eureka:
+  username: ${EUREKA_USERNAME:eureka}
+  password: ${EUREKA_PASSWORD:password}
   instance:
     hostname: localhost
     prefer-ip-address: true
