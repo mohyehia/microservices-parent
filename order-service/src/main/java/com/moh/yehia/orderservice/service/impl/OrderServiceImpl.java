@@ -8,6 +8,8 @@ import com.moh.yehia.orderservice.model.response.InventoryResponse;
 import com.moh.yehia.orderservice.repository.OrderRepository;
 import com.moh.yehia.orderservice.service.design.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
+    private final Tracer tracer;
 
     @Override
     public String save(OrderRequest orderRequest) {
@@ -33,20 +36,25 @@ public class OrderServiceImpl implements OrderService {
 
         List<String> productCodes = orderItems.stream().map(OrderItem::getProductCode).collect(Collectors.toList());
 
-        InventoryResponse[] inventoryResponses = webClientBuilder.build().get()
-                .uri("lb://inventory-service/api/v1/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", productCodes).build())
-                .retrieve()
-                .bodyToMono(InventoryResponse[].class)
-                .block();
-        if (inventoryResponses == null || inventoryResponses.length == 0) {
-            throw new IllegalArgumentException("Some products are not in stock, please try again later!");
-        }
-        boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isProductInStock);
-        if (allProductsInStock) {
-            orderRepository.save(order);
-            return "Order saved successfully!";
-        } else {
-            throw new IllegalArgumentException("Some products are not in stock, please try again later!");
+        Span inventoryServiceLookup = tracer.nextSpan().name("InventoryServiceLookup");
+        try (Tracer.SpanInScope spanInScope = tracer.withSpan(inventoryServiceLookup.start())) {
+            InventoryResponse[] inventoryResponses = webClientBuilder.build().get()
+                    .uri("lb://inventory-service/api/v1/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", productCodes).build())
+                    .retrieve()
+                    .bodyToMono(InventoryResponse[].class)
+                    .block();
+            if (inventoryResponses == null || inventoryResponses.length == 0) {
+                throw new IllegalArgumentException("Some products are not in stock, please try again later!");
+            }
+            boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isProductInStock);
+            if (allProductsInStock) {
+                orderRepository.save(order);
+                return "Order saved successfully!";
+            } else {
+                throw new IllegalArgumentException("Some products are not in stock, please try again later!");
+            }
+        } finally {
+            inventoryServiceLookup.end();
         }
     }
 
