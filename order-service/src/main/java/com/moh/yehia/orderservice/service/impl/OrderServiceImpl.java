@@ -5,11 +5,14 @@ import com.moh.yehia.orderservice.model.entity.OrderItem;
 import com.moh.yehia.orderservice.model.request.OrderLineDTO;
 import com.moh.yehia.orderservice.model.request.OrderRequest;
 import com.moh.yehia.orderservice.model.response.InventoryResponse;
+import com.moh.yehia.orderservice.model.response.OrderPlacedEvent;
 import com.moh.yehia.orderservice.repository.OrderRepository;
 import com.moh.yehia.orderservice.service.design.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -24,6 +27,10 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
     private final Tracer tracer;
+    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
+
+    @Value("${spring.kafka.template.default-topic}")
+    private String kafkaTopic;
 
     @Override
     public String save(OrderRequest orderRequest) {
@@ -49,6 +56,7 @@ public class OrderServiceImpl implements OrderService {
             boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isProductInStock);
             if (allProductsInStock) {
                 orderRepository.save(order);
+                kafkaTemplate.send(kafkaTopic, new OrderPlacedEvent(order.getOrderNumber()));
                 return "Order saved successfully!";
             } else {
                 throw new IllegalArgumentException("Some products are not in stock, please try again later!");

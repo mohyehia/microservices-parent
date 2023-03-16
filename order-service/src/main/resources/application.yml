@@ -14,7 +14,21 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
+  # kafka properties
+  kafka:
+    bootstrap-servers: localhost:9092
+    template:
+      default-topic: notificationTopic
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: notificationEvent:com.moh.yehia.orderservice.model.response.OrderPlacedEvent
 
+  # zipkin configuration
   zipkin:
     base-url: http://localhost:9411
   sleuth:
