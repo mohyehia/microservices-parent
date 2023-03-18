@@ -23,6 +23,7 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>notification-service</module>
+        <module>config-server</module>
     </modules>
 
     <properties>
@@ -143,6 +144,19 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:11-jre</image>
+                    </from>
+                    <to>
+                        <image>registry.hub.docker.com/mohyehia99/${project.artifactId}</image>
+                    </to>
                 </configuration>
             </plugin>
         </plugins>
