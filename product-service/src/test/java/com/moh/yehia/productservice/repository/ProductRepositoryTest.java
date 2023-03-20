@@ -2,6 +2,7 @@ package com.moh.yehia.productservice.repository;
 
 import com.moh.yehia.productservice.model.entity.Product;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -18,7 +19,7 @@ import java.util.Arrays;
 @DataMongoTest
 public class ProductRepositoryTest {
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:latest");
 
     @Autowired
     private ProductRepository productRepository;
@@ -26,6 +27,11 @@ public class ProductRepositoryTest {
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry) {
         dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    }
+
+    @BeforeEach
+    void clearData(){
+        productRepository.deleteAll();
     }
 
     @Test
