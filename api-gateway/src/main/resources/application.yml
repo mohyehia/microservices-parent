@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: api-gateway
@@ -31,11 +32,6 @@ spring:
     sampler:
       probability: 1.0
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8180/realms/spring-boot-microservices
 logging:
   level:
     root: info
@@ -55,3 +51,5 @@ management:
     web:
       exposure:
         include: "prometheus"
+server:
+  port: 8082
