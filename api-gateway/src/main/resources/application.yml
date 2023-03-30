@@ -7,14 +7,18 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: authentication-service
+          uri: lb://authentication-service
+          predicates:
+            - Path=/authentication-service/api/*/auth
         - id: product-service
           uri: lb://product-service
           predicates:
-            - Path=/api/*/products
+            - Path=/product-service/api/*/products
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/api/*/orders
+            - Path=/order-service/api/*/orders
         - id: discovery-server
           uri: http://localhost:8761
           predicates:
