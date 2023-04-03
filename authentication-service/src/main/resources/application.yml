@@ -1,6 +1,12 @@
 spring:
   application:
     name: authentication-service
+  # zipkin configuration
+  zipkin:
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      probability: 1.0
 server:
   port: 9093
   servlet:
