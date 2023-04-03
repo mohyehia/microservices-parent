@@ -1,8 +1,6 @@
 package com.moh.yehia.apigateway.config;
 
 import com.moh.yehia.apigateway.exception.UnAuthorizedException;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,14 +22,14 @@ public class TokenValidator {
         try {
             PublicKey publicKey = retrievePublicKey();
             log.info("public key loaded successfully!");
-            Jws<Claims> jws = Jwts.parserBuilder()
+            Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .build()
-                    .parseClaimsJws(accessToken);
+                    .parseClaimsJws(accessToken).getBody();
             log.info("access token is valid!");
         } catch (Exception e) {
             e.printStackTrace();
-            throw new UnAuthorizedException("Invalid Access Token!");
+            throw new UnAuthorizedException("Invalid or expired access token, please login again and try!");
         }
     }
 

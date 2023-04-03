@@ -19,7 +19,7 @@ keycloak:
   credentials:
     secret: 6d04bwRaKJVnb8LGpo6ZLRRfYvHbnIS6
   bearer-only: true
-  use-resource-role-mappings: true
+  use-resource-role-mappings: true # false if u need to use the realm roles instead of the client roles
 
 eureka:
   client:
