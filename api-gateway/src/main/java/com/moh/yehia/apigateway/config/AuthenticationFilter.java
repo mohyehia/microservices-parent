@@ -5,7 +5,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
@@ -16,8 +15,11 @@ import java.util.function.Predicate;
 @Log4j2
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
-    public AuthenticationFilter() {
+    private final TokenValidator tokenValidator;
+
+    public AuthenticationFilter(TokenValidator tokenValidator) {
         super(Config.class);
+        this.tokenValidator = tokenValidator;
     }
 
     private static final List<String> openApiEndpoints = List.of(
@@ -46,7 +48,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 if (accessToken.startsWith("Bearer ")) {
                     accessToken = accessToken.substring("Bearer ".length());
                     log.info("here calling the auth service to validate the access token!");
-                    log.info("access token =>{}", accessToken);
+                    tokenValidator.validateAccessToken(accessToken);
                 }
             }
             return chain.filter(exchange);
