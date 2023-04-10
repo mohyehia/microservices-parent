@@ -10,6 +10,10 @@ spring:
           username: <git_username>
           password: <git_password>
           default-label: master
+  security:
+    user:
+      name: config_root
+      password: P@ssw0rd
 server:
   port: 8888
 

@@ -1,6 +1,7 @@
 package com.moh.yehia.orderservice.controller;
 
 import com.moh.yehia.orderservice.model.request.OrderRequest;
+import com.moh.yehia.orderservice.model.response.PlaceOrderResponse;
 import com.moh.yehia.orderservice.service.design.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -23,14 +24,15 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    @CircuitBreaker(name = "inventory", fallbackMethod = "fallback")
-    @TimeLimiter(name = "inventory")
+    @CircuitBreaker(name = "inventory")
+    @TimeLimiter(name = "inventory", fallbackMethod = "fallback")
     @Retry(name = "inventory")
-    public CompletableFuture<ResponseEntity<String>> placeOrder(@Valid @RequestBody OrderRequest orderRequest) {
+    public CompletableFuture<ResponseEntity<PlaceOrderResponse>> placeOrder(@Valid @RequestBody OrderRequest orderRequest) {
         return CompletableFuture.supplyAsync(() -> new ResponseEntity<>(orderService.save(orderRequest), HttpStatus.CREATED));
     }
 
-    public CompletableFuture<ResponseEntity<String>> fallback(Exception e) {
-        return CompletableFuture.supplyAsync(() -> new ResponseEntity<>("Oops! Something went wrong, please try again after some time!", HttpStatus.OK));
+    public CompletableFuture<ResponseEntity<PlaceOrderResponse>> fallback(Exception e) {
+        e.printStackTrace();
+        return CompletableFuture.supplyAsync(() -> new ResponseEntity<>(new PlaceOrderResponse("Failed", "Oops! Something went wrong, please try again after some time!", null), HttpStatus.OK));
     }
 }

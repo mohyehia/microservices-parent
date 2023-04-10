@@ -20,7 +20,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Transactional(readOnly = true)
     public List<InventoryResponse> isProductInStock(List<String> skuCodes) {
         List<Inventory> inventories = inventoryRepository.findBySkuCodeIn(skuCodes);
-        if (inventories == null || inventories.isEmpty()){
+        if (inventories == null || inventories.isEmpty()) {
             return null;
         }
         return inventories.stream()

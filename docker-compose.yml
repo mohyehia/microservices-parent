@@ -15,6 +15,7 @@ services:
       - '3306:3306'
     volumes:
       - D:\docker-volumes\order-service-mysql:/var/lib/mysql
+      - D:\docker-volumes\order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
   # mysql database for inventory-service
@@ -33,6 +34,7 @@ services:
       - '3300'
     volumes:
       - D:\docker-volumes\inventory-service-mysql:/var/lib/mysql
+      - D:\docker-volumes\inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
   # mongo database for product-service
@@ -78,7 +80,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-      - '8180:8080'
+      - '8080:8080'
     volumes:
       - D:\docker-volumes\keycloak-data:/opt/keycloak/data/import
     depends_on:
@@ -117,7 +119,7 @@ services:
   # discovery server
   discovery-server:
     container_name: discovery-server
-    image: mohyehia99/discovery-server:1.0.0
+    image: discovery-server:1.0.0
     ports:
       - '8761:8761'
     environment:
@@ -128,7 +130,7 @@ services:
   # config server
   config-server:
     container_name: config-server
-    image: mohyehia99/config-server:1.0.0
+    image: config-server:1.0.0
     ports:
       - '8888:8888'
     depends_on:
@@ -138,23 +140,34 @@ services:
   # api gateway
   api-gateway:
     container_name: api-gateway
-    image: mohyehia99/api-gateway:1.0.0
+    image: api-gateway:1.0.0
     ports:
-      - '8080:8080'
+      - '8082:8082'
     expose:
-      - '8080'
+      - '8082'
     environment:
       SPRING_PROFILES_ACTIVE: docker
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
     depends_on:
       - zipkin
-      - keycloak
       - discovery-server
+
+  # authentication-service
+  authentication-service:
+    container_name: authentication-service
+    image: authentication-service:1.0.0
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - zipkin
+      - discovery-server
+      - keycloak
+      - api-gateway
 
   # product-service
   product-service:
     container_name: product-service
-    image: mohyehia99/product-service:1.0.0
+    image: product-service:1.0.0
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -166,7 +179,7 @@ services:
   # order-service
   order-service:
     container_name: order-service
-    image: mohyehia99/order-service:1.0.0
+    image: order-service:1.0.0
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -180,7 +193,7 @@ services:
   # inventory-service
   inventory-service:
     container_name: inventory-service
-    image: mohyehia99/inventory-service:1.0.0
+    image: inventory-service:1.0.0
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -194,7 +207,7 @@ services:
   # notification-service
   notification-service:
     container_name: notification-service
-    image: mohyehia99/notification-service:1.0.0
+    image: notification-service:1.0.0
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:

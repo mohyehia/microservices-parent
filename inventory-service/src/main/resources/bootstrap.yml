@@ -4,11 +4,15 @@ spring:
   cloud:
     config:
       uri: http://localhost:8888
+      username: config_root
+      password: P@ssw0rd
 ---
 spring:
   cloud:
     config:
       uri: http://config-server:8888
+      username: config_root
+      password: P@ssw0rd
   config:
     activate:
       on-profile: docker

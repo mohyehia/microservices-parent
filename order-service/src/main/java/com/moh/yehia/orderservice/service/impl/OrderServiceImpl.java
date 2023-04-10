@@ -1,14 +1,17 @@
 package com.moh.yehia.orderservice.service.impl;
 
+import com.moh.yehia.orderservice.exception.InvalidOrderException;
 import com.moh.yehia.orderservice.model.entity.Order;
 import com.moh.yehia.orderservice.model.entity.OrderItem;
 import com.moh.yehia.orderservice.model.request.OrderLineDTO;
 import com.moh.yehia.orderservice.model.request.OrderRequest;
 import com.moh.yehia.orderservice.model.response.InventoryResponse;
 import com.moh.yehia.orderservice.model.response.OrderPlacedEvent;
+import com.moh.yehia.orderservice.model.response.PlaceOrderResponse;
 import com.moh.yehia.orderservice.repository.OrderRepository;
 import com.moh.yehia.orderservice.service.design.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
@@ -33,7 +37,8 @@ public class OrderServiceImpl implements OrderService {
     private String kafkaTopic;
 
     @Override
-    public String save(OrderRequest orderRequest) {
+    public PlaceOrderResponse save(OrderRequest orderRequest) {
+        log.info("start creating new order");
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
         List<OrderItem> orderItems = orderRequest.getOrderLines()
@@ -50,14 +55,16 @@ public class OrderServiceImpl implements OrderService {
                     .retrieve()
                     .bodyToMono(InventoryResponse[].class)
                     .block();
+            log.info("inventoryResponse =>{}", Arrays.toString(inventoryResponses));
             if (inventoryResponses == null || inventoryResponses.length == 0) {
-                throw new IllegalArgumentException("Some products are not in stock, please try again later!");
+                throw new InvalidOrderException("Some products are not in stock, please try again later!");
             }
             boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isProductInStock);
             if (allProductsInStock) {
-                orderRepository.save(order);
+                order = orderRepository.save(order);
+                log.info("Order saved successfully with number =>{}", order.getOrderNumber());
                 kafkaTemplate.send(kafkaTopic, new OrderPlacedEvent(order.getOrderNumber()));
-                return "Order saved successfully!";
+                return new PlaceOrderResponse("SUCCESS", "Order saved successfully!", order.getOrderNumber());
             } else {
                 throw new IllegalArgumentException("Some products are not in stock, please try again later!");
             }
