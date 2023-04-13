@@ -1,6 +1,7 @@
 package com.moh.yehia.orderservice.advice;
 
 import com.moh.yehia.orderservice.exception.InvalidOrderException;
+import com.moh.yehia.orderservice.exception.InventoryServiceUnavailableException;
 import com.moh.yehia.orderservice.model.response.ApiError;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.http.HttpStatus;
@@ -21,10 +22,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InventoryServiceUnavailableException.class)
+    public ResponseEntity<ApiError> handleInventoryServiceUnavailableException(InventoryServiceUnavailableException e, WebRequest webRequest) {
+        e.printStackTrace();
+        ApiError apiError = new ApiError(HttpStatus.SERVICE_UNAVAILABLE.name(), e.getMessage(), webRequest.getDescription(false));
+        return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(CallNotPermittedException.class)
     public ResponseEntity<ApiError> handleCallNotPermittedException(CallNotPermittedException e, WebRequest webRequest) {
         e.printStackTrace();
-        ApiError apiError = new ApiError(HttpStatus.SERVICE_UNAVAILABLE.name(), e.getMessage(), webRequest.getDescription(false));
+        ApiError apiError = new ApiError(HttpStatus.SERVICE_UNAVAILABLE.name(), "Service is not available now, Please try again later!", webRequest.getDescription(false));
         return new ResponseEntity<>(apiError, HttpStatus.SERVICE_UNAVAILABLE);
     }
 

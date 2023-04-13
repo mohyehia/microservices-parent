@@ -1,13 +1,14 @@
 package com.moh.yehia.inventoryservice.controller;
 
+import com.moh.yehia.inventoryservice.model.request.OrderLineInquiry;
 import com.moh.yehia.inventoryservice.model.response.InventoryResponse;
 import com.moh.yehia.inventoryservice.service.design.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -18,8 +19,8 @@ import java.util.List;
 public class InventoryController {
     private final InventoryService inventoryService;
 
-    @GetMapping
-    public ResponseEntity<List<InventoryResponse>> productInStock(@RequestParam("skuCode") List<String> skuCodes) {
-        return new ResponseEntity<>(inventoryService.isProductInStock(skuCodes), HttpStatus.OK);
+    @PostMapping
+    public ResponseEntity<List<InventoryResponse>> productInStock(@RequestBody List<OrderLineInquiry> orderLineInquiries) {
+        return new ResponseEntity<>(inventoryService.isProductInStock(orderLineInquiries), HttpStatus.OK);
     }
 }

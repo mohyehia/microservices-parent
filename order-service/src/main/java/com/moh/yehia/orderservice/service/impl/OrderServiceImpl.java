@@ -5,6 +5,7 @@ import com.moh.yehia.orderservice.exception.InvalidOrderException;
 import com.moh.yehia.orderservice.model.entity.Order;
 import com.moh.yehia.orderservice.model.entity.OrderItem;
 import com.moh.yehia.orderservice.model.request.OrderLineDTO;
+import com.moh.yehia.orderservice.model.request.OrderLineInquiry;
 import com.moh.yehia.orderservice.model.request.OrderRequest;
 import com.moh.yehia.orderservice.model.response.InventoryResponse;
 import com.moh.yehia.orderservice.model.response.OrderPlacedEvent;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,9 +44,10 @@ public class OrderServiceImpl implements OrderService {
                 .map(this::mapToOrderItemEntity).collect(Collectors.toList());
         order.setOrderItems(orderItems);
 
-        List<String> productCodes = orderItems.stream().map(OrderItem::getProductCode).collect(Collectors.toList());
+        List<OrderLineInquiry> orderLineInquiries = new ArrayList<>();
+        orderItems.forEach(orderItem -> orderLineInquiries.add(new OrderLineInquiry(orderItem.getProductCode(), orderItem.getQuantity())));
+        List<InventoryResponse> inventoryResponses = inventoryClient.productInStock(orderLineInquiries);
 
-        List<InventoryResponse> inventoryResponses = inventoryClient.productInStock(productCodes);
         log.info("inventoryResponse =>{}", inventoryResponses);
         if (inventoryResponses == null || inventoryResponses.isEmpty()) {
             throw new InvalidOrderException("Some products are not in stock, please try again later!");
@@ -56,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
 //            kafkaTemplate.send(kafkaTopic, new OrderPlacedEvent(order.getOrderNumber()));
             return new PlaceOrderResponse("SUCCESS", "Order saved successfully!", order.getOrderNumber());
         } else {
-            throw new IllegalArgumentException("Some products are not in stock, please try again later!");
+            throw new InvalidOrderException("Some products are not in stock, please try again later!");
         }
     }
 
