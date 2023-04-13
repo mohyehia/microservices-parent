@@ -66,4 +66,4 @@ server:
   port: 8082
 
 keycloak:
-  publicKey: <<keycloak realm public key>>
+  publicKey: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu11OQQkH06L7oiiGbY8eCgk3hqSBK+/YJx3874RmrWYoiV4VnL8FzJAUJIBeedcXoSckh/cgb9I7x8fDOoJ84Tkg7WaIbGwxHquwrrVU3xd9oMZRIhutbL3kfKSf4KLkpL9zMiWf9ipVw8IFUn+LiJ69GMH9CH9zSlvtm5WQV9BwarsN2+FLitmdaq03MjXxTPpzo47Zb4P/AukuqUQfNAWJPV9d/3jj8dEUzVO2vm17dcLGbVbIRiuFxc786Tn3AV6IHHlWZAUfyQzMwJbVR/HsxvKq7cXWfN6gaSWGM8PvvXi2MaE0NMwzw5cVEECFxTD8RvRxlnyggXk7CrsLIQIDAQAB

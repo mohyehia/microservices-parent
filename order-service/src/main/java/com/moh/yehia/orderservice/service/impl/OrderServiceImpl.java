@@ -1,5 +1,6 @@
 package com.moh.yehia.orderservice.service.impl;
 
+import com.moh.yehia.orderservice.client.InventoryClient;
 import com.moh.yehia.orderservice.exception.InvalidOrderException;
 import com.moh.yehia.orderservice.model.entity.Order;
 import com.moh.yehia.orderservice.model.entity.OrderItem;
@@ -13,13 +14,9 @@ import com.moh.yehia.orderservice.service.design.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,8 +26,7 @@ import java.util.stream.Collectors;
 @Log4j2
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-    private final WebClient.Builder webClientBuilder;
-    private final Tracer tracer;
+    private final InventoryClient inventoryClient;
     private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
 
     @Value("${spring.kafka.template.default-topic}")
@@ -48,28 +44,19 @@ public class OrderServiceImpl implements OrderService {
 
         List<String> productCodes = orderItems.stream().map(OrderItem::getProductCode).collect(Collectors.toList());
 
-        Span inventoryServiceLookup = tracer.nextSpan().name("InventoryServiceLookup");
-        try (Tracer.SpanInScope spanInScope = tracer.withSpan(inventoryServiceLookup.start())) {
-            InventoryResponse[] inventoryResponses = webClientBuilder.build().get()
-                    .uri("lb://inventory-service/api/v1/inventory", uriBuilder -> uriBuilder.queryParam("skuCode", productCodes).build())
-                    .retrieve()
-                    .bodyToMono(InventoryResponse[].class)
-                    .block();
-            log.info("inventoryResponse =>{}", Arrays.toString(inventoryResponses));
-            if (inventoryResponses == null || inventoryResponses.length == 0) {
-                throw new InvalidOrderException("Some products are not in stock, please try again later!");
-            }
-            boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(InventoryResponse::isProductInStock);
-            if (allProductsInStock) {
-                order = orderRepository.save(order);
-                log.info("Order saved successfully with number =>{}", order.getOrderNumber());
-                kafkaTemplate.send(kafkaTopic, new OrderPlacedEvent(order.getOrderNumber()));
-                return new PlaceOrderResponse("SUCCESS", "Order saved successfully!", order.getOrderNumber());
-            } else {
-                throw new IllegalArgumentException("Some products are not in stock, please try again later!");
-            }
-        } finally {
-            inventoryServiceLookup.end();
+        List<InventoryResponse> inventoryResponses = inventoryClient.productInStock(productCodes);
+        log.info("inventoryResponse =>{}", inventoryResponses);
+        if (inventoryResponses == null || inventoryResponses.isEmpty()) {
+            throw new InvalidOrderException("Some products are not in stock, please try again later!");
+        }
+        boolean allProductsInStock = inventoryResponses.stream().allMatch(InventoryResponse::isProductInStock);
+        if (allProductsInStock) {
+            order = orderRepository.save(order);
+            log.info("Order saved successfully with number =>{}", order.getOrderNumber());
+//            kafkaTemplate.send(kafkaTopic, new OrderPlacedEvent(order.getOrderNumber()));
+            return new PlaceOrderResponse("SUCCESS", "Order saved successfully!", order.getOrderNumber());
+        } else {
+            throw new IllegalArgumentException("Some products are not in stock, please try again later!");
         }
     }
 
