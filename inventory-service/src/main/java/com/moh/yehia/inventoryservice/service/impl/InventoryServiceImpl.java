@@ -37,4 +37,12 @@ public class InventoryServiceImpl implements InventoryService {
 
         return response;
     }
+
+    @Override
+    public Inventory save(String productCode, int quantity) {
+        Inventory inventory = new Inventory();
+        inventory.setSkuCode(productCode);
+        inventory.setQuantity(quantity);
+        return inventoryRepository.save(inventory);
+    }
 }
