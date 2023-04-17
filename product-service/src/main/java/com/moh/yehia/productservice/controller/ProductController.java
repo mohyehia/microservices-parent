@@ -1,5 +1,6 @@
 package com.moh.yehia.productservice.controller;
 
+import com.moh.yehia.productservice.exception.InvalidRequestException;
 import com.moh.yehia.productservice.model.entity.Product;
 import com.moh.yehia.productservice.model.request.ProductRequest;
 import com.moh.yehia.productservice.model.response.ProductDTO;
@@ -33,5 +34,14 @@ public class ProductController {
     public ResponseEntity<ProductRetrievalResponse> retrieveProducts() {
         List<ProductDTO> productDTOS = productService.retrieveProducts();
         return new ResponseEntity<>(new ProductRetrievalResponse(productDTOS.size(), productDTOS), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDTO> findById(@PathVariable("id") String id) {
+        Product product = productService.findById(id);
+        if (product == null) {
+            throw new InvalidRequestException("Product not found. please check the product id and try again!");
+        }
+        return new ResponseEntity<>(productService.mapToProductDTO(product), HttpStatus.OK);
     }
 }

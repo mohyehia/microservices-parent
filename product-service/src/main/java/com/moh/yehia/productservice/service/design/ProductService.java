@@ -12,4 +12,6 @@ public interface ProductService {
     List<ProductDTO> retrieveProducts();
 
     ProductDTO mapToProductDTO(Product product);
+
+    Product findById(String id);
 }

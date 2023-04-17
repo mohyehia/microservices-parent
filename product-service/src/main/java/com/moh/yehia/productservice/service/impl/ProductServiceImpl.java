@@ -46,4 +46,9 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    public Product findById(String id) {
+        return productRepository.findById(id).orElse(null);
+    }
+
 }
