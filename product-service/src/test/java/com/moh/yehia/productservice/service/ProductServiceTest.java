@@ -3,7 +3,7 @@ package com.moh.yehia.productservice.service;
 import com.github.javafaker.Faker;
 import com.moh.yehia.productservice.model.entity.Product;
 import com.moh.yehia.productservice.model.request.ProductRequest;
-import com.moh.yehia.productservice.model.response.ProductResponse;
+import com.moh.yehia.productservice.model.response.ProductDTO;
 import com.moh.yehia.productservice.service.design.ProductService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,7 +38,7 @@ public class ProductServiceTest {
     void when_calling_retrieveProducts_then_return_all_products() {
         Product product1 = populateProduct();
         Product product2 = populateProduct();
-        List<ProductResponse> productsResponse = Arrays.asList(mapToProductResponse(product1), mapToProductResponse(product2));
+        List<ProductDTO> productsResponse = Arrays.asList(mapToProductResponse(product1), mapToProductResponse(product2));
         BDDMockito.given(productService.retrieveProducts()).willReturn(productsResponse);
         Assertions.assertThat(productService.retrieveProducts())
                 .hasSize(2)
@@ -65,8 +65,8 @@ public class ProductServiceTest {
                 .build();
     }
 
-    private ProductResponse mapToProductResponse(Product product) {
-        return ProductResponse
+    private ProductDTO mapToProductResponse(Product product) {
+        return ProductDTO
                 .builder()
                 .id(product.getId())
                 .name(product.getName())

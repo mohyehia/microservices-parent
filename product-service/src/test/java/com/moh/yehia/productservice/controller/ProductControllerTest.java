@@ -2,7 +2,7 @@ package com.moh.yehia.productservice.controller;
 
 import com.moh.yehia.productservice.model.entity.Product;
 import com.moh.yehia.productservice.model.request.ProductRequest;
-import com.moh.yehia.productservice.model.response.ProductResponse;
+import com.moh.yehia.productservice.model.response.ProductDTO;
 import com.moh.yehia.productservice.service.design.ProductService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -64,8 +64,8 @@ public class ProductControllerTest extends GlobalSpringContext {
                 .build();
     }
 
-    private ProductResponse mapToProductResponse(Product product) {
-        return ProductResponse
+    private ProductDTO mapToProductResponse(Product product) {
+        return ProductDTO
                 .builder()
                 .id(product.getId())
                 .name(product.getName())

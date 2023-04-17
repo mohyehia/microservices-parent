@@ -2,7 +2,8 @@ package com.moh.yehia.productservice.controller;
 
 import com.moh.yehia.productservice.model.entity.Product;
 import com.moh.yehia.productservice.model.request.ProductRequest;
-import com.moh.yehia.productservice.model.response.ProductResponse;
+import com.moh.yehia.productservice.model.response.ProductDTO;
+import com.moh.yehia.productservice.model.response.ProductRetrievalResponse;
 import com.moh.yehia.productservice.service.design.NotificationService;
 import com.moh.yehia.productservice.service.design.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +23,15 @@ public class ProductController {
 
 
     @PostMapping
-    public ResponseEntity<Product> saveProduct(@Valid @RequestBody ProductRequest productRequest) {
+    public ResponseEntity<ProductDTO> saveProduct(@Valid @RequestBody ProductRequest productRequest) {
         Product product = productService.save(productRequest);
         notificationService.sendToInventory(product.getId());
-        return new ResponseEntity<>(product, HttpStatus.CREATED);
+        return new ResponseEntity<>(productService.mapToProductDTO(product), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> retrieveProducts() {
-        return new ResponseEntity<>(productService.retrieveProducts(), HttpStatus.OK);
+    public ResponseEntity<ProductRetrievalResponse> retrieveProducts() {
+        List<ProductDTO> productDTOS = productService.retrieveProducts();
+        return new ResponseEntity<>(new ProductRetrievalResponse(productDTOS.size(), productDTOS), HttpStatus.OK);
     }
 }

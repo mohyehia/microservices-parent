@@ -2,7 +2,7 @@ package com.moh.yehia.productservice.service.impl;
 
 import com.moh.yehia.productservice.model.entity.Product;
 import com.moh.yehia.productservice.model.request.ProductRequest;
-import com.moh.yehia.productservice.model.response.ProductResponse;
+import com.moh.yehia.productservice.model.response.ProductDTO;
 import com.moh.yehia.productservice.repository.ProductRepository;
 import com.moh.yehia.productservice.service.design.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -23,23 +23,27 @@ public class ProductServiceImpl implements ProductService {
                 .name(productRequest.getName())
                 .description(productRequest.getDescription())
                 .price(productRequest.getPrice())
+                .categoryId(productRequest.getCategoryId())
                 .build();
         return productRepository.save(product);
     }
 
     @Override
-    public List<ProductResponse> retrieveProducts() {
+    public List<ProductDTO> retrieveProducts() {
         List<Product> products = productRepository.findAll();
-        return products.stream().map(this::mapToProductResponse).collect(Collectors.toList());
+        return products.stream().map(this::mapToProductDTO).collect(Collectors.toList());
     }
 
-    private ProductResponse mapToProductResponse(Product product) {
-        return ProductResponse
+    @Override
+    public ProductDTO mapToProductDTO(Product product) {
+        return ProductDTO
                 .builder()
                 .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
+                .categoryId(product.getCategoryId())
                 .build();
     }
+
 }
