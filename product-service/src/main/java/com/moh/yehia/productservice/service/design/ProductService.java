@@ -14,4 +14,6 @@ public interface ProductService {
     ProductDTO mapToProductDTO(Product product);
 
     Product findById(String id);
+
+    List<ProductDTO> findByCategoryId(String categoryId);
 }

@@ -31,8 +31,13 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ProductRetrievalResponse> retrieveProducts() {
-        List<ProductDTO> productDTOS = productService.retrieveProducts();
+    public ResponseEntity<ProductRetrievalResponse> retrieveProducts(@RequestParam(value = "category", required = false) String categoryId) {
+        List<ProductDTO> productDTOS;
+        if (categoryId != null && !categoryId.isEmpty()){
+            productDTOS = productService.findByCategoryId(categoryId);
+        }else{
+            productDTOS  = productService.retrieveProducts();
+        }
         return new ResponseEntity<>(new ProductRetrievalResponse(productDTOS.size(), productDTOS), HttpStatus.OK);
     }
 

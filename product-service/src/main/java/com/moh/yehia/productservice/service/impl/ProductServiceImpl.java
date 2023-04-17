@@ -51,4 +51,10 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findById(id).orElse(null);
     }
 
+    @Override
+    public List<ProductDTO> findByCategoryId(String categoryId) {
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+        return products.stream().map(this::mapToProductDTO).collect(Collectors.toList());
+    }
+
 }
