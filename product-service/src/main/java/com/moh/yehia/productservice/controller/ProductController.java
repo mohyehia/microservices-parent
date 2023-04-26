@@ -26,7 +26,7 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductDTO> saveProduct(@Valid @RequestBody ProductRequest productRequest) {
         Product product = productService.save(productRequest);
-        notificationService.sendToInventory(product.getId());
+//        notificationService.sendToInventory(product.getId());
         return new ResponseEntity<>(productService.mapToProductDTO(product), HttpStatus.CREATED);
     }
 

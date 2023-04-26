@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: api-gateway
@@ -16,6 +15,13 @@ spring:
           uri: lb://product-service
           predicates:
             - Path=/product-service/api/*/products/**,/product-service/api/*/categories/**
+            - Method=GET
+
+        - id: product-service-administration
+          uri: lb://product-service
+          predicates:
+            - Path=/product-service/api/*/products/**,/product-service/api/*/categories/**
+            - Method=POST,PUT,DELETE
           filters:
             - AuthenticationFilter
 
