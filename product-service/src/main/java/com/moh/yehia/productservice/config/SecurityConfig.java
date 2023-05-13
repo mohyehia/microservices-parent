@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .and()
                 .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests((auth -> auth
-                        .antMatchers(HttpMethod.GET, "/api/*/products/**", "/api/*/categories/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/api/*/products/**", "/api/*/categories/**", "/actuator/**").permitAll()
                         .anyRequest().hasRole("ADMIN")))
                 .httpBasic().disable();
         return httpSecurity.build();

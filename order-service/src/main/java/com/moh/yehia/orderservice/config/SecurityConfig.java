@@ -22,7 +22,7 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .addFilterBefore(new JwtFilter(), UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests((auth -> auth.anyRequest().hasRole("CUSTOMER")))
+                .authorizeHttpRequests((auth -> auth.antMatchers("/actuator/**").permitAll().anyRequest().hasRole("CUSTOMER")))
                 .httpBasic().disable();
         return httpSecurity.build();
     }
