@@ -73,7 +73,7 @@ services:
     command: [ "start-dev", "--import-realm"]
     environment:
       DB_VENDOR: MYSQL
-      DB_ADDR: mysql
+      DB_ADDR: keycloak-mysql
       DB_DATABASE: keycloak
       DB_USER: keycloak
       DB_PASSWORD: password
@@ -140,7 +140,8 @@ services:
   # api gateway
   api-gateway:
     container_name: api-gateway
-    image: api-gateway:1.0.0
+    build:
+      context: api-gateway/.
     ports:
       - '8082:8082'
     expose:
@@ -148,6 +149,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
+      KEYCLOAK_PUBLIC_KEY: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj1rMSbpmecTiD6PX1HuxB2ErkmPXUpq1giNrzVUsr0sVD7yyEm49FgGHjDVacRMPk4XwkUAfNcd9zPcIiMaC9eXbEon1omNZ7rRz2h4xIZvyXF+fAS3qZeHp+nWHEtSI0hZvFWGQnwT8VmLHX5D1C2W/zLizCm6raflfxGgWjMd5K3mT/MBw2gUvcJea0I78YNR3/vrnMSGA7xh3PCj4bfVhP5jA3yLu4URO+hrkYG6AEdHCyGmQnvGH+S2s5rM7BFTK03fls4pf8S0C9bgVFr8ACmrrQfiAfL1rJ0xycVjgebVHEWlo9RPpq2Ty3HdSaXL57aCU8y22ZCKhuEoJvQIDAQAB
     depends_on:
       - zipkin
       - discovery-server
@@ -155,9 +157,11 @@ services:
   # authentication-service
   authentication-service:
     container_name: authentication-service
-    image: authentication-service:1.0.0
+    build:
+      context: authentication-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      KEYCLOAK_CLIENT_SECRET: hjGU4FPlYJ0pKwtOPzMNPaCYUoKzIAAY
     depends_on:
       - zipkin
       - discovery-server
@@ -175,6 +179,7 @@ services:
       - discovery-server
       - api-gateway
       - config-server
+    restart: on-failure
 
   # order-service
   order-service:
@@ -189,6 +194,7 @@ services:
       - discovery-server
       - api-gateway
       - config-server
+    restart: on-failure
 
   # inventory-service
   inventory-service:
@@ -203,6 +209,7 @@ services:
       - discovery-server
       - api-gateway
       - config-server
+    restart: on-failure
 
   # notification-service
   notification-service:
@@ -216,6 +223,7 @@ services:
       - discovery-server
       - api-gateway
       - config-server
+    restart: on-failure
 
   # prometheus
   prometheus:

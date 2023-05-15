@@ -17,7 +17,7 @@ keycloak:
   ssl-required: none
   resource: spring-cloud-client
   credentials:
-    secret: ${KEYCLOAK_CLIENT_SECRET:PpsQ8IvEfDHxjZxEjmek30d9WIQl1yEM}
+    secret: ${KEYCLOAK_CLIENT_SECRET}
   bearer-only: true
   use-resource-role-mappings: true # false if u need to use the realm roles instead of the client roles
 
