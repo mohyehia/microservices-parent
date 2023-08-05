@@ -8,12 +8,12 @@ spring:
     sampler:
       probability: 1.0
 server:
-  port: 9093
+  port: 9800
   servlet:
     context-path: /authentication-service
 keycloak:
   realm: spring-boot-microservices
-  auth-server-url: http://localhost:8180
+  auth-server-url: http://localhost:8080
   ssl-required: none
   resource: spring-cloud-client
   credentials:

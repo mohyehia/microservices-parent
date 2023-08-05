@@ -6,31 +6,15 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: authentication-service
-          uri: lb://authentication-service
-          predicates:
-            - Path=/authentication-service/api/*/auth
-
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/product-service/api/*/products/**,/product-service/api/*/categories/**
-            - Method=GET
-
-        - id: product-service-administration
-          uri: lb://product-service
-          predicates:
-            - Path=/product-service/api/*/products/**,/product-service/api/*/categories/**
-            - Method=POST,PUT,DELETE
-          filters:
-            - AuthenticationFilter
 
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/order-service/api/*/orders
-          filters:
-            - AuthenticationFilter
 
         - id: discovery-server
           uri: http://localhost:8761
@@ -70,6 +54,3 @@ management:
         include: "prometheus"
 server:
   port: 8082
-
-keycloak:
-  publicKey: ${KEYCLOAK_PUBLIC_KEY}

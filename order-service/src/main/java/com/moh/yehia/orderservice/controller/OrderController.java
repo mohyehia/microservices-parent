@@ -7,11 +7,9 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -24,8 +22,7 @@ public class OrderController {
     @CircuitBreaker(name = "inventory")
 //    @Retry(name = "inventory")
     @ResponseStatus(HttpStatus.CREATED)
-    public PlaceOrderResponse placeOrder(Authentication authentication, @Valid @RequestBody OrderRequest orderRequest) {
-        log.info("authentication =>{}", authentication.toString());
-        return orderService.save(orderRequest);
+    public PlaceOrderResponse placeOrder(@Valid @RequestBody OrderRequest orderRequest) {
+        return orderService.save("mohammed", orderRequest);
     }
 }

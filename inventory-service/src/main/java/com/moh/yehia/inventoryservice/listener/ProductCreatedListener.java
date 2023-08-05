@@ -1,4 +1,4 @@
-package com.moh.yehia.inventoryservice;
+package com.moh.yehia.inventoryservice.listener;
 
 import com.moh.yehia.inventoryservice.model.entity.Inventory;
 import com.moh.yehia.inventoryservice.model.response.ProductCreatedEvent;

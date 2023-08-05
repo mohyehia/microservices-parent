@@ -5,10 +5,8 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/mohyehia/cloud-config-server.git
+          uri: file:///D:\projects\spring\microservices-parent\cloud-config-server
           clone-on-start: true
-          username: <git_username>
-          password: <git_password>
           default-label: master
   security:
     user:

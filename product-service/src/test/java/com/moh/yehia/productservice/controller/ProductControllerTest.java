@@ -52,7 +52,7 @@ public class ProductControllerTest extends GlobalSpringContext {
     }
 
     private ProductRequest populateProductRequest() {
-        return new ProductRequest(faker.commerce().productName(), faker.commerce().productName(), BigDecimal.valueOf(faker.number().randomNumber()));
+        return new ProductRequest(faker.commerce().productName(), faker.commerce().productName(), BigDecimal.valueOf(faker.number().randomNumber()), faker.commerce().department());
     }
 
     private Product populateProductEntity() {

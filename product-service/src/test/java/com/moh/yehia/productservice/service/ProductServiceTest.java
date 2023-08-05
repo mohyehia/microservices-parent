@@ -76,7 +76,7 @@ public class ProductServiceTest {
     }
 
     private ProductRequest populateProductRequest() {
-        return new ProductRequest(faker.commerce().productName(), faker.commerce().material(), BigDecimal.valueOf(faker.number().randomNumber()));
+        return new ProductRequest(faker.commerce().productName(), faker.commerce().material(), BigDecimal.valueOf(faker.number().randomNumber()), faker.commerce().department());
     }
 
     private Product productFromProductRequest(ProductRequest productRequest) {
@@ -86,6 +86,7 @@ public class ProductServiceTest {
                 .name(productRequest.getName())
                 .description(productRequest.getDescription())
                 .price(productRequest.getPrice())
+                .categoryId(productRequest.getCategoryId())
                 .build();
     }
 }
