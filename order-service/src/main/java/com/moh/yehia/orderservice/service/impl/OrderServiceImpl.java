@@ -1,6 +1,5 @@
 package com.moh.yehia.orderservice.service.impl;
 
-import com.moh.yehia.orderservice.client.InventoryClient;
 import com.moh.yehia.orderservice.exception.InvalidOrderException;
 import com.moh.yehia.orderservice.model.entity.Order;
 import com.moh.yehia.orderservice.model.entity.OrderItem;
@@ -8,15 +7,12 @@ import com.moh.yehia.orderservice.model.request.OrderLineDTO;
 import com.moh.yehia.orderservice.model.request.OrderLineInquiry;
 import com.moh.yehia.orderservice.model.request.OrderRequest;
 import com.moh.yehia.orderservice.model.response.InventoryResponse;
-import com.moh.yehia.orderservice.model.response.OrderPlacedEvent;
 import com.moh.yehia.orderservice.model.response.PlaceOrderResponse;
 import com.moh.yehia.orderservice.repository.OrderRepository;
 import com.moh.yehia.orderservice.service.design.InventoryService;
 import com.moh.yehia.orderservice.service.design.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,12 +25,8 @@ import java.util.stream.Collectors;
 @Log4j2
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-//    private final InventoryClient inventoryClient;
+    //    private final InventoryClient inventoryClient;
     private final InventoryService inventoryService;
-    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
-
-    @Value("${spring.kafka.template.default-topic}")
-    private String kafkaTopic;
 
     @Override
     public PlaceOrderResponse save(String username, OrderRequest orderRequest) {
