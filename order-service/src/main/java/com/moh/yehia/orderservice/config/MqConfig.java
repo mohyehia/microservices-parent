@@ -1,4 +1,4 @@
-package com.moh.yehia.productservice.config;
+package com.moh.yehia.orderservice.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Configuration;
 public class MqConfig {
 
     @Bean
-    public Queue productQueue() {
-        return new Queue("products_created_queue");
+    public Queue queue() {
+        return new Queue("order_created_queue");
     }
 
     @Bean
@@ -22,11 +22,11 @@ public class MqConfig {
     }
 
     @Bean
-    public Binding binding(Queue productQueue, TopicExchange topicExchange) {
+    public Binding binding(Queue queue, TopicExchange topicExchange) {
         return BindingBuilder
-                .bind(productQueue)
+                .bind(queue)
                 .to(topicExchange)
-                .with("product_routing_key");
+                .with("order_created_routing_key");
     }
 
     @Bean

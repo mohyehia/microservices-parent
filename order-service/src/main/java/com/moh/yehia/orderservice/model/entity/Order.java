@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
     private String username;

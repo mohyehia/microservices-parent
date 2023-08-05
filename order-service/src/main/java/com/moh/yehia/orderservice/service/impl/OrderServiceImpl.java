@@ -13,6 +13,7 @@ import com.moh.yehia.orderservice.service.design.InventoryService;
 import com.moh.yehia.orderservice.service.design.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     //    private final InventoryClient inventoryClient;
     private final InventoryService inventoryService;
+    private final RabbitTemplate rabbitTemplate;
 
     @Override
     public PlaceOrderResponse save(String username, OrderRequest orderRequest) {
@@ -51,6 +53,8 @@ public class OrderServiceImpl implements OrderService {
         if (allProductsInStock) {
             order = orderRepository.save(order);
             log.info("Order saved successfully with number =>{}", order.getOrderNumber());
+            rabbitTemplate.convertAndSend("microservices_exchange", "order_created_routing_key", orderRequest);
+            log.info("order is being sent successfully to inventory-service!");
 //            kafkaTemplate.send(kafkaTopic, new OrderPlacedEvent(order.getOrderNumber(), username));
             return new PlaceOrderResponse("SUCCESS", "Order saved successfully!", order.getOrderNumber());
         } else {

@@ -12,21 +12,34 @@ import org.springframework.context.annotation.Configuration;
 public class MqConfig {
 
     @Bean
-    public Queue queue() {
+    public Queue productQueue() {
         return new Queue("products_created_queue");
     }
 
     @Bean
-    public TopicExchange topicExchange() {
-        return new TopicExchange("products_exchange");
+    public Queue orderQueue(){
+        return new Queue("order_created_queue");
     }
 
     @Bean
-    public Binding binding(Queue queue, TopicExchange topicExchange) {
+    public TopicExchange topicExchange() {
+        return new TopicExchange("microservices_exchange");
+    }
+
+    @Bean
+    public Binding productBinding(Queue productQueue, TopicExchange topicExchange) {
         return BindingBuilder
-                .bind(queue)
+                .bind(productQueue)
                 .to(topicExchange)
-                .with("routing_key");
+                .with("product_routing_key");
+    }
+
+    @Bean
+    public Binding orderBinding(Queue orderQueue, TopicExchange topicExchange){
+        return BindingBuilder
+                .bind(orderQueue)
+                .to(topicExchange)
+                .with("order_created_routing_key");
     }
 
     @Bean

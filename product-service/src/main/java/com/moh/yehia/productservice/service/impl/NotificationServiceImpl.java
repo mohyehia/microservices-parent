@@ -14,7 +14,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final RabbitTemplate rabbitTemplate;
     @Override
     public void sendToInventory(String productCode) {
-        rabbitTemplate.convertAndSend("products_exchange", "routing_key", new ProductCreatedEvent(productCode));
+        rabbitTemplate.convertAndSend("microservices_exchange", "product_routing_key", new ProductCreatedEvent(productCode));
         log.info("new event of productCreation is sent to the inventory-service!");
     }
 }
