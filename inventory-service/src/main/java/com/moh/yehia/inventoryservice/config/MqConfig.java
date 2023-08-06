@@ -1,29 +1,22 @@
 package com.moh.yehia.inventoryservice.config;
 
-import org.springframework.amqp.core.*;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
+import com.moh.yehia.inventoryservice.constant.RabbitMqProperties;
+import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@RequiredArgsConstructor
 public class MqConfig {
+    private final RabbitMqProperties rabbitMqProperties;
 
     @Bean
     public Queue productQueue() {
-        return new Queue("products_created_queue");
-    }
-
-    @Bean
-    public Queue orderQueue(){
-        return new Queue("order_created_queue");
-    }
-
-    @Bean
-    public TopicExchange topicExchange() {
-        return new TopicExchange("microservices_exchange");
+        return new Queue(rabbitMqProperties.getProductQueue());
     }
 
     @Bean
@@ -31,26 +24,24 @@ public class MqConfig {
         return BindingBuilder
                 .bind(productQueue)
                 .to(topicExchange)
-                .with("product_routing_key");
+                .with(rabbitMqProperties.getProductRoutingQueue());
     }
 
     @Bean
-    public Binding orderBinding(Queue orderQueue, TopicExchange topicExchange){
+    public Queue orderQueue() {
+        return new Queue(rabbitMqProperties.getOrderQueue());
+    }
+
+    @Bean
+    public Binding orderBinding(Queue orderQueue, TopicExchange topicExchange) {
         return BindingBuilder
                 .bind(orderQueue)
                 .to(topicExchange)
-                .with("order_created_routing_key");
+                .with(rabbitMqProperties.getOrderRoutingQueue());
     }
 
     @Bean
-    public MessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
-
-    @Bean
-    public AmqpTemplate amqpTemplate(ConnectionFactory connectionFactory) {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(messageConverter());
-        return rabbitTemplate;
+    public TopicExchange topicExchange() {
+        return new TopicExchange(rabbitMqProperties.getTopicExchange());
     }
 }

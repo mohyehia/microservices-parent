@@ -17,7 +17,7 @@ import java.security.SecureRandom;
 public class ProductCreatedListener {
     private final InventoryService inventoryService;
 
-    @RabbitListener(queues = "products_created_queue")
+    @RabbitListener(queues = "${spring.rabbitmq.config.productQueue}")
     public void handleProductCreation(ProductCreatedEvent productCreatedEvent) throws NoSuchAlgorithmException {
         log.info("Received notification for a new created product =>{}", productCreatedEvent);
         int quantity = SecureRandom.getInstanceStrong().nextInt(100);

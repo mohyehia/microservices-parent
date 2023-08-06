@@ -3,3 +3,9 @@ spring:
     username: admin
     password: admin
     addresses: localhost:5672
+    config:
+      orderQueue: order_created_queue
+      orderRoutingQueue: order_created_routing_key
+      productQueue: product_created_queue
+      productRoutingQueue: product_created_routing_key
+      topicExchange: microservices_exchange

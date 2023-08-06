@@ -1,5 +1,6 @@
 package com.moh.yehia.productservice.service.impl;
 
+import com.moh.yehia.productservice.constant.RabbitMqProperties;
 import com.moh.yehia.productservice.model.response.ProductCreatedEvent;
 import com.moh.yehia.productservice.service.design.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +13,10 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class NotificationServiceImpl implements NotificationService {
     private final RabbitTemplate rabbitTemplate;
+    private final RabbitMqProperties rabbitMqProperties;
     @Override
     public void sendToInventory(String productCode) {
-        rabbitTemplate.convertAndSend("microservices_exchange", "product_routing_key", new ProductCreatedEvent(productCode));
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getTopicExchange(), rabbitMqProperties.getProductRoutingQueue(), new ProductCreatedEvent(productCode));
         log.info("new event of productCreation is sent to the inventory-service!");
     }
 }
