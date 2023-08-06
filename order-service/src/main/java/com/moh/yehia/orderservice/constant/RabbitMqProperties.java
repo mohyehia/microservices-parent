@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 @Data
 public class RabbitMqProperties {
     private String orderQueue;
+    private String orderRoutingKey;
+    private String notificationQueue;
+    private String notificationRoutingKey;
     private String topicExchange;
-    private String orderRoutingQueue;
+
 }

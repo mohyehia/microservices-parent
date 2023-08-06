@@ -19,7 +19,7 @@ public class SmsServiceImpl implements SmsService {
         try {
             Message message = Message
                     .creator(
-                            new PhoneNumber("+201095776698"),   // to
+                            new PhoneNumber("+20123456789"),   // to
                             new PhoneNumber(twilioProperties.getPhoneNumber()), // from
                             "Your order has been successfully created and here is its number: " + orderNumber
                     )

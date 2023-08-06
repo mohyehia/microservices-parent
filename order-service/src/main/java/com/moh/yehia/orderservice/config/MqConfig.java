@@ -20,15 +20,28 @@ public class MqConfig {
     }
 
     @Bean
-    public TopicExchange topicExchange() {
-        return new TopicExchange(rabbitMqProperties.getTopicExchange());
+    public Queue notificationQueue() {
+        return new Queue(rabbitMqProperties.getNotificationQueue());
     }
 
     @Bean
-    public Binding binding(Queue orderQueue, TopicExchange topicExchange) {
+    public Binding orderBinding(Queue orderQueue, TopicExchange topicExchange) {
         return BindingBuilder
                 .bind(orderQueue)
                 .to(topicExchange)
-                .with(rabbitMqProperties.getOrderRoutingQueue());
+                .with(rabbitMqProperties.getOrderRoutingKey());
+    }
+
+    @Bean
+    public Binding notificationBinding(Queue notificationQueue, TopicExchange topicExchange) {
+        return BindingBuilder
+                .bind(notificationQueue)
+                .to(topicExchange)
+                .with(rabbitMqProperties.getNotificationRoutingKey());
+    }
+
+    @Bean
+    public TopicExchange topicExchange() {
+        return new TopicExchange(rabbitMqProperties.getTopicExchange());
     }
 }

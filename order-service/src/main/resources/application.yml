@@ -5,5 +5,7 @@ spring:
     addresses: localhost:5672
     config:
       orderQueue: order_created_queue
+      orderRoutingKey: order_created_routing_key
+      notificationQueue: notification_queue
+      notificationRoutingKey: notification_routing_key
       topicExchange: microservices_exchange
-      orderRoutingQueue: order_created_routing_key
