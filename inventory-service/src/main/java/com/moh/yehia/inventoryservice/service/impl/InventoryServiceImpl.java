@@ -1,6 +1,7 @@
 package com.moh.yehia.inventoryservice.service.impl;
 
 import com.moh.yehia.inventoryservice.model.entity.Inventory;
+import com.moh.yehia.inventoryservice.model.request.OrderLineDTO;
 import com.moh.yehia.inventoryservice.model.request.OrderLineInquiry;
 import com.moh.yehia.inventoryservice.model.response.InventoryResponse;
 import com.moh.yehia.inventoryservice.repository.InventoryRepository;
@@ -44,5 +45,20 @@ public class InventoryServiceImpl implements InventoryService {
         inventory.setSkuCode(productCode);
         inventory.setQuantity(quantity);
         return inventoryRepository.save(inventory);
+    }
+
+    @Override
+    @Transactional
+    public void updateInventory(List<OrderLineDTO> orderLines) {
+        List<String> productCodes = orderLines.stream().map(OrderLineDTO::getProductCode).collect(Collectors.toList());
+        List<Inventory> inventoryProducts = inventoryRepository.findBySkuCodeIn(productCodes);
+        for (OrderLineDTO orderLineDTO : orderLines) {
+            inventoryProducts.forEach(inventory -> {
+                if (orderLineDTO.getProductCode().equals(inventory.getSkuCode())) {
+                    inventory.setQuantity(inventory.getQuantity() - orderLineDTO.getQuantity());
+                }
+            });
+        }
+        inventoryRepository.saveAll(inventoryProducts);
     }
 }
