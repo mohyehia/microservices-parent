@@ -1,0 +1,202 @@
+---
+version: '3'
+services:
+
+  # mysql database for order-service
+  order-service-mysql:
+    container_name: order-service-mysql
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: order-service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: order-service
+      MYSQL_PASSWORD: P@ssw0rd
+    ports:
+      - '3306:3306'
+    volumes:
+      - ../volumes/order-service-mysql:/var/lib/mysql
+      - ../volumes/scripts/order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+#
+#  # mysql database for inventory-service
+  inventory-service-mysql:
+    container_name: inventory-service-mysql
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: inventory-service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: inventory-service
+      MYSQL_PASSWORD: P@ssw0rd
+      MYSQL_TCP_PORT: 3300
+    ports:
+      - '3300:3300'
+    expose:
+      - '3300'
+    volumes:
+      - ../volumes/inventory-service-mysql:/var/lib/mysql
+      - ../volumes/scripts/inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+#
+#  # mongo database for product-service
+  product-service-mongo:
+    container_name: product-service-mongo
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    expose:
+      - '27017'
+    volumes:
+      - ../volumes/product-service-mongo:/data/db
+
+  # zipkin server
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin
+    ports:
+      - '9411:9411'
+
+  # rabbitMQ
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:management
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # discovery server
+  discovery-server:
+    container_name: discovery-server
+    build:
+      context: ../discovery-server/.
+    ports:
+      - '8761:8761'
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+#
+#  # config server
+  config-server:
+    container_name: config-server
+    image: mohyehia99/config-server:0.0.1
+    ports:
+      - '8888:8888'
+    depends_on:
+      - discovery-server
+    environment:
+      GIT_REPOSITORY: ${GIT_REPOSITORY}
+      GIT_USERNAME : ${GIT_USERNAME}
+      GIT_PASSWORD : ${GIT_PASSWORD}
+      DISCOVERY_SERVER_URL : ${DISCOVERY_SERVER_URL}
+
+  # api gateway
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: ../api-gateway/.
+    ports:
+      - '8082:8082'
+    expose:
+      - '8082'
+    environment:
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - zipkin
+      - discovery-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # product-service
+  product-service:
+    container_name: product-service
+    build:
+      context: ../product-service/.
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - product-service-mongo
+      - discovery-server
+      - api-gateway
+      - config-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+##
+##  # order-service
+  order-service:
+    container_name: order-service
+    build:
+      context: ../order-service/.
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - order-service-mysql
+      - zipkin
+      - discovery-server
+      - api-gateway
+      - config-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+##
+##  # inventory-service
+  inventory-service:
+    container_name: inventory-service
+    build:
+      context: ../inventory-service/.
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - inventory-service-mysql
+      - zipkin
+      - discovery-server
+      - api-gateway
+      - config-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+##
+##  # notification-service
+  notification-service:
+    container_name: notification-service
+    build:
+      context: ../notification-service/.
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - zipkin
+      - discovery-server
+      - api-gateway
+      - config-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3

@@ -1,6 +1,28 @@
 ---
 version: '3'
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   # mysql database for order-service
   order-service-mysql:
@@ -70,7 +92,7 @@ services:
   keycloak:
     container_name: keycloak
     image: quay.io/keycloak/keycloak:21.0.1
-    command: [ "start-dev", "--import-realm"]
+    command: ["start-dev", "--import-realm"]
     environment:
       DB_VENDOR: MYSQL
       DB_ADDR: keycloak-mysql
@@ -92,29 +114,6 @@ services:
     image: openzipkin/zipkin
     ports:
       - '9411:9411'
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.2
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-
-  broker:
-    image: confluentinc/cp-kafka:7.3.2
-    container_name: broker
-    ports:
-      - "9092:9092"
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   # discovery server
   discovery-server:
@@ -149,10 +148,17 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
-      KEYCLOAK_PUBLIC_KEY: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj1rMSbpmecTiD6PX1HuxB2ErkmPXUpq1giNrzVUsr0sVD7yyEm49FgGHjDVacRMPk4XwkUAfNcd9zPcIiMaC9eXbEon1omNZ7rRz2h4xIZvyXF+fAS3qZeHp+nWHEtSI0hZvFWGQnwT8VmLHX5D1C2W/zLizCm6raflfxGgWjMd5K3mT/MBw2gUvcJea0I78YNR3/vrnMSGA7xh3PCj4bfVhP5jA3yLu4URO+hrkYG6AEdHCyGmQnvGH+S2s5rM7BFTK03fls4pf8S0C9bgVFr8ACmrrQfiAfL1rJ0xycVjgebVHEWlo9RPpq2Ty3HdSaXL57aCU8y22ZCKhuEoJvQIDAQAB
+      KEYCLOAK_PUBLIC_KEY: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7nAsToi2PWNsjkPNIPoXIZ/O7Dt8GLBRmqUb4iWt/zNGV4WTiphiT593NRMWnD8K/wTAvaVugQn4JOqGAxV4if3lcqDTaMQuzahQcUMva9/LaqYZXNXpM2rInwjZuUOu9HtJ511gMhdhErmI1N67bV8ImzrvuYyblaRP8IrSS8vnTHSWzQHEjK4uhZ6jCHoctWF75YXrgUCkdwVwbtc3yTzjDowK7f4xKloMn7tcergvVGw+2ENMSO0SUs0MEEtceoSkhieiFZXShFcavqi89wi4VwEZ5NJ3/qasOai+LpZtP840LJEPy4T0vSdgR4Jco2QdMXbo21Eo2tEcsYX3YQIDAQAB
     depends_on:
       - zipkin
       - discovery-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # authentication-service
   authentication-service:
@@ -161,17 +167,25 @@ services:
       context: authentication-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      KEYCLOAK_CLIENT_SECRET: hjGU4FPlYJ0pKwtOPzMNPaCYUoKzIAAY
+      KEYCLOAK_CLIENT_SECRET: xvBGYBwqELJ8VW1FM5KUqjQJWzUfvP24
     depends_on:
       - zipkin
       - discovery-server
       - keycloak
       - api-gateway
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # product-service
   product-service:
     container_name: product-service
-    image: product-service:1.0.0
+    build:
+      context: ./product-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -179,12 +193,19 @@ services:
       - discovery-server
       - api-gateway
       - config-server
-    restart: on-failure
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # order-service
   order-service:
     container_name: order-service
-    image: order-service:1.0.0
+    build:
+      context: ./order-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -194,12 +215,19 @@ services:
       - discovery-server
       - api-gateway
       - config-server
-    restart: on-failure
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # inventory-service
   inventory-service:
     container_name: inventory-service
-    image: inventory-service:1.0.0
+    build:
+      context: ./inventory-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -209,12 +237,19 @@ services:
       - discovery-server
       - api-gateway
       - config-server
-    restart: on-failure
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # notification-service
   notification-service:
     container_name: notification-service
-    image: notification-service:1.0.0
+    build:
+      context: ./notification-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
     depends_on:
@@ -223,7 +258,14 @@ services:
       - discovery-server
       - api-gateway
       - config-server
-    restart: on-failure
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
 
   # prometheus
   prometheus:
@@ -234,11 +276,6 @@ services:
       - "9090:9090"
     volumes:
       - D:\docker-volumes\prometheus\prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - product-service
-      - inventory-service
-      - order-service
-      - notification-service
 
   # grafana
   grafana:
@@ -254,3 +291,62 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
+
+  # elk stack
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: elasticsearch
+    environment:
+      node.name: elasticsearch
+      discovery.type: single-node
+      bootstrap.memory_lock: true
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      ELASTIC_USERNAME: elastic
+      ELASTIC_PASSWORD: P@ssw0rd
+      xpack.security.enabled: "true"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - ./volumes/elasticsearch:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.10
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=P@ssw0rd
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.10
+    container_name: logstash
+    environment:
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=P@ssw0rd
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "25826:25826"
+      - "5044:5044"
+    volumes:
+      - ./volumes/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.17.10
+    container_name: filebeat
+    entrypoint: "filebeat -e -strict.perms=false"
+
+    volumes:
+      - ./volumes/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./volumes/filebeat/data:/usr/share/filebeat.data:rw
+    user: root
