@@ -2,3 +2,4 @@ spring:
   rabbitmq:
     config:
       notificationQueue: notification_queue
+      topicExchange: microservices_exchange

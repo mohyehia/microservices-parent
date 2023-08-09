@@ -1,4 +1,4 @@
-package com.moh.yehia.inventoryservice.constant;
+package com.moh.yehia.notificationservice.constant;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Data
 public class RabbitMqProperties {
-    private String orderQueue;
-    private String productQueue;
+    private String notificationQueue;
     private String topicExchange;
 }

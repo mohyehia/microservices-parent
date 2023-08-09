@@ -3,3 +3,4 @@ spring:
     config:
       orderQueue: order_created_queue
       productQueue: product_created_queue
+      topicExchange: microservices_exchange
