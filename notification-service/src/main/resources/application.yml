@@ -1,7 +1,4 @@
 spring:
   rabbitmq:
-    username: admin
-    password: admin
-    addresses: localhost:5672
     config:
       notificationQueue: notification_queue

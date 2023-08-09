@@ -1,8 +1,5 @@
 spring:
   rabbitmq:
-    username: admin
-    password: admin
-    addresses: localhost:5672
     config:
       orderQueue: order_created_queue
       orderRoutingKey: order_created_routing_key
