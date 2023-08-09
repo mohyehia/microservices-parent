@@ -17,7 +17,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ./volumes/elastic/elasticsearch:/usr/share/elasticsearch/data
+      - ../volumes/elastic/elasticsearch:/usr/share/elasticsearch/data
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.10
@@ -44,7 +44,7 @@ services:
       - "25826:25826"
       - "5044:5044"
     volumes:
-      - ./volumes/elastic/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ../volumes/elastic/logstash/pipeline:/usr/share/logstash/pipeline:ro
     depends_on:
       - elasticsearch
 
@@ -54,8 +54,8 @@ services:
     entrypoint: "filebeat -e -strict.perms=false"
 
     volumes:
-      - ./volumes/elastic/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ../volumes/elastic/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./volumes/elastic/filebeat/data:/usr/share/filebeat.data:rw
+      - ../volumes/elastic/filebeat/data:/usr/share/filebeat.data:rw
     user: root

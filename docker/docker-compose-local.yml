@@ -1,4 +1,4 @@
----
+
 version: '3'
 services:
 
@@ -17,7 +17,7 @@ services:
       - ../volumes/order-service-mysql:/var/lib/mysql
       - ../volumes/scripts/order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
-#
+
 #  # mysql database for inventory-service
   inventory-service-mysql:
     container_name: inventory-service-mysql
@@ -36,7 +36,7 @@ services:
       - ../volumes/inventory-service-mysql:/var/lib/mysql
       - ../volumes/scripts/inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
-#
+
 #  # mongo database for product-service
   product-service-mongo:
     container_name: product-service-mongo
@@ -57,12 +57,12 @@ services:
       - '9411:9411'
 
   # rabbitMQ
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq:management
+  rabbitmq-container:
+    container_name: rabbitmq-container
+    image: rabbitmq:3.12-management
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     ports:
       - '5672:5672'
       - '15672:15672'
@@ -80,7 +80,7 @@ services:
       - '8761:8761'
     environment:
       SPRING_PROFILES_ACTIVE: docker
-#
+
 #  # config server
   config-server:
     container_name: config-server
@@ -94,6 +94,10 @@ services:
       GIT_USERNAME : ${GIT_USERNAME}
       GIT_PASSWORD : ${GIT_PASSWORD}
       DISCOVERY_SERVER_URL : ${DISCOVERY_SERVER_URL}
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # api gateway
   api-gateway:
@@ -118,7 +122,7 @@ services:
         condition: on-failure
         max_attempts: 3
 
-  # product-service
+###  # product-service
   product-service:
     container_name: product-service
     build:
@@ -128,8 +132,8 @@ services:
     depends_on:
       - product-service-mongo
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -137,8 +141,8 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-##
-##  # order-service
+
+###  # order-service
   order-service:
     container_name: order-service
     build:
@@ -149,8 +153,8 @@ services:
       - order-service-mysql
       - zipkin
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -159,8 +163,7 @@ services:
         condition: on-failure
         max_attempts: 3
 
-##
-##  # inventory-service
+####  # inventory-service
   inventory-service:
     container_name: inventory-service
     build:
@@ -171,8 +174,8 @@ services:
       - inventory-service-mysql
       - zipkin
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -180,8 +183,8 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-##
-##  # notification-service
+
+###  # notification-service
   notification-service:
     container_name: notification-service
     build:
@@ -191,8 +194,8 @@ services:
     depends_on:
       - zipkin
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"

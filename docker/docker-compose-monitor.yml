@@ -8,7 +8,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./volumes/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../volumes/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
   # grafana
   grafana:
@@ -20,7 +20,7 @@ services:
     links:
       - prometheus:prometheus
     volumes:
-      - ./volumes/grafana:/var/lib/grafana
+      - ../volumes/grafana:/var/lib/grafana
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
