@@ -1,0 +1,22 @@
+
+spring:
+  application:
+    name: admin-server
+  security:
+    user:
+      name: ${ADMIN_SERVER_USERNAME:admin}
+      password: ${ADMIN_SERVER_PASSWORD:admin}
+  boot:
+    admin:
+      discovery:
+        ignored-services:
+          - '${spring.application.name}'
+server:
+  port: 9091
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://eureka:password@localhost:8761/eureka/
