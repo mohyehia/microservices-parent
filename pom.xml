@@ -25,6 +25,7 @@
         <module>notification-service</module>
         <module>config-server</module>
         <module>authentication-service</module>
+        <module>admin-server</module>
     </modules>
 
     <properties>
@@ -34,6 +35,8 @@
         <spring-cloud.version>2021.0.2</spring-cloud.version>
         <keycloak.version>15.0.2</keycloak.version>
         <logstash-logback-encoder.version>7.3</logstash-logback-encoder.version>
+        <spring-boot-admin.version>2.7.4</spring-boot-admin.version>
+        <spring-boot-admin-client.version>2.7.4</spring-boot-admin-client.version>
     </properties>
 
     <developers>

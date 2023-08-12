@@ -1,6 +1,10 @@
 spring:
   zipkin:
     base-url: http://zipkin:9411
+  boot:
+    admin:
+      client:
+        url: http://admin-client:9091
 
 eureka:
   instance:

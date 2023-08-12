@@ -32,6 +32,12 @@
             <artifactId>spring-cloud-sleuth-zipkin</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-starter-client</artifactId>
+            <version>${spring-boot-admin-client.version}</version>
+        </dependency>
+
     </dependencies>
 
 </project>

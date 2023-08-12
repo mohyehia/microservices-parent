@@ -99,6 +99,27 @@ services:
         condition: on-failure
         max_attempts: 3
 
+# admin-server
+  admin-server:
+    container_name: admin-server
+    build:
+      context: ../admin-server/.
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      DISCOVERY_SERVER_HOST: ${DISCOVERY_SERVER_HOST}
+    ports:
+      - '9091:9091'
+    expose:
+      - 9091
+    depends_on:
+      - discovery-server
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
   # api gateway
   api-gateway:
     container_name: api-gateway
@@ -111,6 +132,8 @@ services:
     environment:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
       SPRING_PROFILES_ACTIVE: docker
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
     depends_on:
       - zipkin
       - discovery-server
@@ -129,6 +152,9 @@ services:
       context: ../product-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - product-service-mongo
       - discovery-server
@@ -149,6 +175,9 @@ services:
       context: ../order-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - order-service-mysql
       - zipkin
@@ -170,6 +199,9 @@ services:
       context: ../inventory-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - inventory-service-mysql
       - zipkin
@@ -191,6 +223,9 @@ services:
       context: ../notification-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - zipkin
       - discovery-server
