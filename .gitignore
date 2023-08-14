@@ -3,6 +3,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 volumes/
+!volumes/elastic/filebeat/filebeat.docker.yml
+!volumes/elastic/logstash/pipeline/logstash.conf
+!volumes/prometheus/prometheus.yml
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
