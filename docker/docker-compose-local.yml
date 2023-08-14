@@ -71,6 +71,20 @@ services:
         condition: on-failure
         max_attempts: 3
 
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:21.0.1
+    hostname: keycloak
+    command:
+      - 'start-dev'
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - '8080:8080'
+    volumes:
+      - ../volumes/keycloak-data:/opt/keycloak/data
+
   # discovery server
   discovery-server:
     container_name: discovery-server
@@ -132,11 +146,10 @@ services:
     environment:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
       SPRING_PROFILES_ACTIVE: docker
-      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
-      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
     depends_on:
       - zipkin
       - discovery-server
+      - keycloak
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -152,9 +165,6 @@ services:
       context: ../product-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
-      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
-      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - product-service-mongo
       - discovery-server
@@ -175,9 +185,6 @@ services:
       context: ../order-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
-      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
-      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - order-service-mysql
       - zipkin
@@ -191,17 +198,14 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-
-####  # inventory-service
+#
+#####  # inventory-service
   inventory-service:
     container_name: inventory-service
     build:
       context: ../inventory-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
-      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
-      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - inventory-service-mysql
       - zipkin
@@ -215,17 +219,14 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-
-###  # notification-service
+#
+####  # notification-service
   notification-service:
     container_name: notification-service
     build:
       context: ../notification-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
-      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
-      ADMIN_SERVER_URL: ${ADMIN_SERVER_URL}
     depends_on:
       - zipkin
       - discovery-server

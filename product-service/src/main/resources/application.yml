@@ -4,13 +4,3 @@ spring:
       productQueue: product_created_queue
       topicExchange: microservices_exchange
       productRoutingQueue: product_created_routing_key
-  boot:
-    admin:
-      client:
-        url: ${ADMIN_SERVER_URL:http://localhost:9091}
-        username: ${ADMIN_SERVER_USERNAME:admin}
-        password: ${ADMIN_SERVER_PASSWORD:admin}
-        enabled: true
-        auto-registration: true
-        instance:
-          service-host-type: ip

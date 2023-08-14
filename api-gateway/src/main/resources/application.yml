@@ -3,16 +3,12 @@ spring:
     name: api-gateway
   main:
     web-application-type: reactive
-  boot:
-    admin:
-      client:
-        url: http://localhost:9091
-        username: ${ADMIN_SERVER_USERNAME:admin}
-        password: ${ADMIN_SERVER_PASSWORD:admin}
-        enabled: true
-        auto-registration: true
-        instance:
-          service-host-type: ip
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/microservices
+
   cloud:
     gateway:
       routes:

@@ -1,10 +1,11 @@
 spring:
   zipkin:
     base-url: http://zipkin:9411
-  boot:
-    admin:
-      client:
-        url: http://admin-client:9091
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/microservices
 
 eureka:
   instance:
