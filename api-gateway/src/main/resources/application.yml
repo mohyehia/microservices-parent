@@ -16,11 +16,15 @@ spring:
           uri: lb://product-service
           predicates:
             - Path=/product-service/api/*/products/**,/product-service/api/*/categories/**
+          filters:
+            - AccessTokenFilter
 
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/order-service/api/*/orders
+          filters:
+            - AccessTokenFilter
 
         - id: discovery-server
           uri: http://localhost:8761
