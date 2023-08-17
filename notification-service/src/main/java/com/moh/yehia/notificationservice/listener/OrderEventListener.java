@@ -16,7 +16,7 @@ public class OrderEventListener {
     @RabbitListener(queues = "${spring.rabbitmq.config.notificationQueue}")
     public void handleNotification(OrderPlacedEvent orderPlacedEvent) {
         // send an email or sms to the customer with the order details
-        log.info("Received new notification for order =>{}, and username =>{}", orderPlacedEvent.getOrderNumber(), orderPlacedEvent.getUsername());
-        smsService.sendSms(orderPlacedEvent.getOrderNumber());
+        log.info("Received new notification for order =>{}, and username =>{}, and phoneNumber =>{}", orderPlacedEvent.getOrderNumber(), orderPlacedEvent.getUsername(), orderPlacedEvent.getPhoneNumber());
+        smsService.sendSms(orderPlacedEvent);
     }
 }

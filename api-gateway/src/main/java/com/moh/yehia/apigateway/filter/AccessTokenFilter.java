@@ -25,7 +25,6 @@ public class AccessTokenFilter extends AbstractGatewayFilterFactory<AccessTokenF
                 assert authorizationList != null;
                 if (!authorizationList.isEmpty()) {
                     String authToken = authorizationList.get(0);
-                    log.info("authToken =>{}", authToken);
                     exchange.mutate().request(builder -> builder.headers(httpHeaders -> httpHeaders.add(HttpHeaders.AUTHORIZATION, authToken)));
                     return chain.filter(exchange);
                 }

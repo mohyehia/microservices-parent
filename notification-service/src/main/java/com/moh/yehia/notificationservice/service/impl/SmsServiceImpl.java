@@ -1,6 +1,7 @@
 package com.moh.yehia.notificationservice.service.impl;
 
 import com.moh.yehia.notificationservice.config.TwilioProperties;
+import com.moh.yehia.notificationservice.model.OrderPlacedEvent;
 import com.moh.yehia.notificationservice.service.design.SmsService;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
@@ -15,13 +16,13 @@ public class SmsServiceImpl implements SmsService {
     private final TwilioProperties twilioProperties;
 
     @Override
-    public void sendSms(String orderNumber) {
+    public void sendSms(OrderPlacedEvent orderPlacedEvent) {
         try {
             Message message = Message
                     .creator(
-                            new PhoneNumber("+20123456789"),   // to
+                            new PhoneNumber(orderPlacedEvent.getPhoneNumber()),   // to
                             new PhoneNumber(twilioProperties.getPhoneNumber()), // from
-                            "Your order has been successfully created and here is its number: " + orderNumber
+                            "Dear " + orderPlacedEvent.getUsername() + ", Your order has been successfully created and here is its number: " + orderPlacedEvent.getOrderNumber()
                     )
                     .create();
             log.info("message ID =>{}", message.getSid());

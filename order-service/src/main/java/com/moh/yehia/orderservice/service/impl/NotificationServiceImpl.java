@@ -24,8 +24,8 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendToNotification(PlaceOrderResponse placeOrderResponse) {
-        rabbitTemplate.convertAndSend(rabbitMqProperties.getTopicExchange(), rabbitMqProperties.getNotificationRoutingKey(), new OrderPlacedEvent(placeOrderResponse.getOrderNumber(), "mohammed"));
+    public void sendToNotification(OrderPlacedEvent orderPlacedEvent) {
+        rabbitTemplate.convertAndSend(rabbitMqProperties.getTopicExchange(), rabbitMqProperties.getNotificationRoutingKey(), orderPlacedEvent);
         log.info("notification is being sent successfully to notification-service!");
     }
 }
