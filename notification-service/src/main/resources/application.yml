@@ -3,3 +3,8 @@ spring:
     config:
       notificationQueue: notification_queue
       topicExchange: microservices_exchange
+
+twilio:
+  accountSid: ${TWILIO_ACCOUNT_SID}
+  authToken: ${TWILIO_AUTH_TOKEN}
+  phoneNumber: ${TWILIO_PHONE_NUMBER}

@@ -170,9 +170,20 @@
                 <configuration>
                     <from>
                         <image>eclipse-temurin:11-jre</image>
+                        <auth>
+                            <username>dockerId</username>
+                            <password>dockerPassword</password>
+                        </auth>
                     </from>
                     <to>
-                        <image>registry.hub.docker.com/mohyehia99/${project.artifactId}</image>
+                        <image>docker.io/mohyehia99/${project.artifactId}</image>
+                        <tags>
+                            <tag>${project.version}</tag>
+                        </tags>
+                        <auth>
+                            <username>dockerId</username>
+                            <password>dockerPassword</password>
+                        </auth>
                     </to>
                 </configuration>
             </plugin>

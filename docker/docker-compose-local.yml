@@ -122,7 +122,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
       ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
-      DISCOVERY_SERVER_HOST: ${DISCOVERY_SERVER_HOST}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
     ports:
       - '9091:9091'
     expose:
@@ -227,6 +227,9 @@ services:
       context: ../notification-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
     depends_on:
       - zipkin
       - discovery-server
