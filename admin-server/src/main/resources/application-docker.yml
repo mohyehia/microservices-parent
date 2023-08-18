@@ -1,4 +1,0 @@
-eureka:
-  client:
-    service-url:
-      defaultZone: ${DISCOVERY_SERVER_URL:http://eureka:password@discovery-server:8761/eureka/}

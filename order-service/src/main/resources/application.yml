@@ -1,8 +1,8 @@
 spring:
   rabbitmq:
     config:
-      orderQueue: order_created_queue
-      orderRoutingKey: order_created_routing_key
-      notificationQueue: notification_queue
-      notificationRoutingKey: notification_routing_key
-      topicExchange: microservices_exchange
+      orderQueue: ${ORDER_CREATED_QUEUE:order_created_queue}
+      orderRoutingKey: ${ORDER_ROUTER_BINDING_KEY:order_created_routing_key}
+      notificationQueue: ${NOTIFICATION_QUEUE:notification_queue}
+      notificationRoutingKey: ${NOTIFICATION_ROUTER_BINDING_KEY:notification_routing_key}
+      topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}

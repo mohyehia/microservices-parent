@@ -1,6 +1,6 @@
 spring:
   rabbitmq:
     config:
-      productQueue: product_created_queue
-      topicExchange: microservices_exchange
-      productRoutingQueue: product_created_routing_key
+      productQueue: ${PRODUCT_CREATED_QUEUE:product_created_queue}
+      productRoutingQueue: ${PRODUCT_ROUTER_BINDING_KEY:product_created_routing_key}
+      topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}

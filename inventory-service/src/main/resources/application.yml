@@ -1,6 +1,6 @@
 spring:
   rabbitmq:
     config:
-      orderQueue: order_created_queue
-      productQueue: product_created_queue
-      topicExchange: microservices_exchange
+      orderQueue: ${ORDER_CREATED_QUEUE:order_created_queue}
+      productQueue: ${PRODUCT_CREATED_QUEUE:product_created_queue}
+      topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}

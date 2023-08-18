@@ -1,8 +1,8 @@
 spring:
   rabbitmq:
     config:
-      notificationQueue: notification_queue
-      topicExchange: microservices_exchange
+      notificationQueue: ${NOTIFICATION_QUEUE:notification_queue}
+      topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}
 
 twilio:
   accountSid: ${TWILIO_ACCOUNT_SID}

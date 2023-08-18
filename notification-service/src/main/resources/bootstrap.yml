@@ -3,16 +3,6 @@ spring:
     name: notification-service
   cloud:
     config:
-      uri: http://localhost:8888
-      username: config_root
-      password: P@ssw0rd
----
-spring:
-  cloud:
-    config:
-      uri: http://config-server:8888
-      username: config_root
-      password: P@ssw0rd
-  config:
-    activate:
-      on-profile: docker
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+      username: ${CONFIG_SERVER_USERNAME:config_root}
+      password: ${CONFIG_SERVER_PASSWORD:P@ssw0rd}

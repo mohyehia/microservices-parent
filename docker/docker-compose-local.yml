@@ -92,13 +92,12 @@ services:
       context: ../discovery-server/.
     ports:
       - '8761:8761'
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
 
 #  # config server
   config-server:
     container_name: config-server
-    image: mohyehia99/config-server:0.0.1
+    build:
+      context: ../config-server/.
     ports:
       - '8888:8888'
     depends_on:
@@ -108,6 +107,8 @@ services:
       GIT_USERNAME : ${GIT_USERNAME}
       GIT_PASSWORD : ${GIT_PASSWORD}
       DISCOVERY_SERVER_URL : ${DISCOVERY_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     deploy:
       restart_policy:
         condition: on-failure
@@ -119,7 +120,6 @@ services:
     build:
       context: ../admin-server/.
     environment:
-      SPRING_PROFILES_ACTIVE: docker
       ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
       ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
       DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
@@ -145,11 +145,11 @@ services:
       - '8082'
     environment:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
-      SPRING_PROFILES_ACTIVE: docker
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+      ZIPKIN_URL: ${ZIPKIN_URL}
     depends_on:
       - zipkin
       - discovery-server
-      - keycloak
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -165,6 +165,12 @@ services:
       context: ../product-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
+      PRODUCT_ROUTER_BINDING_KEY: ${PRODUCT_ROUTER_BINDING_KEY}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - product-service-mongo
       - discovery-server
@@ -185,6 +191,14 @@ services:
       context: ../order-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
+      ORDER_ROUTER_BINDING_KEY: ${ORDER_ROUTER_BINDING_KEY}
+      NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
+      NOTIFICATION_ROUTER_BINDING_KEY: ${NOTIFICATION_ROUTER_BINDING_KEY}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - order-service-mysql
       - zipkin
@@ -206,6 +220,12 @@ services:
       context: ../inventory-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
+      PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - inventory-service-mysql
       - zipkin
@@ -227,9 +247,14 @@ services:
       context: ../notification-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - zipkin
       - discovery-server

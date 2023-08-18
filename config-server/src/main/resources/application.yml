@@ -12,8 +12,8 @@ spring:
           password: ${GIT_PASSWORD}
   security:
     user:
-      name: config_root
-      password: P@ssw0rd
+      name: ${CONFIG_SERVER_USERNAME}
+      password: ${CONFIG_SERVER_PASSWORD}
 server:
   port: 8888
 
