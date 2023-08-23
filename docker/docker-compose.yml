@@ -1,33 +1,11 @@
----
+
 version: '3'
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.2
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-
-  broker:
-    image: confluentinc/cp-kafka:7.3.2
-    container_name: broker
-    ports:
-      - "9092:9092"
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   # mysql database for order-service
   order-service-mysql:
     container_name: order-service-mysql
-    image: mysql:latest
+    image: mysql:8.1.0
     environment:
       MYSQL_DATABASE: order-service
       MYSQL_ROOT_PASSWORD: root
@@ -36,14 +14,14 @@ services:
     ports:
       - '3306:3306'
     volumes:
-      - D:\docker-volumes\order-service-mysql:/var/lib/mysql
-      - D:\docker-volumes\order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../volumes/order-service-mysql:/var/lib/mysql
+      - ../volumes/scripts/order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
-
-  # mysql database for inventory-service
+  
+  #  # mysql database for inventory-service
   inventory-service-mysql:
     container_name: inventory-service-mysql
-    image: mysql:latest
+    image: mysql:8.1.0
     environment:
       MYSQL_DATABASE: inventory-service
       MYSQL_ROOT_PASSWORD: root
@@ -55,59 +33,21 @@ services:
     expose:
       - '3300'
     volumes:
-      - D:\docker-volumes\inventory-service-mysql:/var/lib/mysql
-      - D:\docker-volumes\inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../volumes/inventory-service-mysql:/var/lib/mysql
+      - ../volumes/scripts/inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
-
-  # mongo database for product-service
+  
+  #  # mongo database for product-service
   product-service-mongo:
     container_name: product-service-mongo
-    image: mongo:latest
+    image: mongo:7.0.0
     restart: unless-stopped
     ports:
       - '27017:27017'
     expose:
       - '27017'
     volumes:
-      - D:\docker-volumes\product-service-mongo:/data/db
-
-  # mysql database for keycloak
-  keycloak-mysql:
-    container_name: keycloak-mysql
-    image: mysql:latest
-    volumes:
-      - D:\docker-volumes\keycloak-mysql:/var/lib/mysql
-    ports:
-      - '3301:3301'
-    expose:
-      - '3301'
-    environment:
-      MYSQL_DATABASE: keycloak
-      MYSQL_USER: keycloak
-      MYSQL_PASSWORD: P@ssw0rd
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_TCP_PORT: 3301
-
-  # keycloak image
-  keycloak:
-    container_name: keycloak
-    image: quay.io/keycloak/keycloak:21.0.1
-    command: 
-      - "start-dev"
-    environment:
-      DB_VENDOR: MYSQL
-      DB_ADDR: keycloak-mysql
-      DB_DATABASE: keycloak
-      DB_USER: keycloak
-      DB_PASSWORD: password
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-    ports:
-      - '8080:8080'
-    volumes:
-      - D:\docker-volumes\keycloak-data:/opt/keycloak/data/
-    depends_on:
-      - keycloak-mysql
+      - ../volumes/product-service-mongo:/data/db
 
   # zipkin server
   zipkin:
@@ -116,40 +56,97 @@ services:
     ports:
       - '9411:9411'
 
+  # rabbitMQ
+  rabbitmq-container:
+    container_name: rabbitmq-container
+    image: rabbitmq:3.12-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:21.0.2
+    hostname: keycloak
+    command:
+      - 'start-dev'
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - '8080:8080'
+    volumes:
+      - ../volumes/keycloak-data:/opt/keycloak/data
+
   # discovery server
   discovery-server:
     container_name: discovery-server
-    image: discovery-server:1.0.0
+    build:
+      context: ../discovery-server/.
     ports:
       - '8761:8761'
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-    depends_on:
-      - zipkin
-
-  # config server
+  
+  #  # config server
   config-server:
     container_name: config-server
-    image: config-server:1.0.0
+    build:
+      context: ../config-server/.
     ports:
       - '8888:8888'
     depends_on:
       - discovery-server
-      - zipkin
+    environment:
+      GIT_REPOSITORY: ${GIT_REPOSITORY}
+      GIT_USERNAME : ${GIT_USERNAME}
+      GIT_PASSWORD : ${GIT_PASSWORD}
+      DISCOVERY_SERVER_URL : ${DISCOVERY_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+  
+  # admin-server
+  admin-server:
+    container_name: admin-server
+    build:
+      context: ../admin-server/.
+    environment:
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+    ports:
+      - '9091:9091'
+    expose:
+      - 9091
+    depends_on:
+      - discovery-server
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
 
   # api gateway
   api-gateway:
     container_name: api-gateway
     build:
-      context: api-gateway/.
+      context: ../api-gateway/.
     ports:
       - '8082:8082'
     expose:
       - '8082'
     environment:
-      SPRING_PROFILES_ACTIVE: docker
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
-      KEYCLOAK_PUBLIC_KEY: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7nAsToi2PWNsjkPNIPoXIZ/O7Dt8GLBRmqUb4iWt/zNGV4WTiphiT593NRMWnD8K/wTAvaVugQn4JOqGAxV4if3lcqDTaMQuzahQcUMva9/LaqYZXNXpM2rInwjZuUOu9HtJ511gMhdhErmI1N67bV8ImzrvuYyblaRP8IrSS8vnTHSWzQHEjK4uhZ6jCHoctWF75YXrgUCkdwVwbtc3yTzjDowK7f4xKloMn7tcergvVGw+2ENMSO0SUs0MEEtceoSkhieiFZXShFcavqi89wi4VwEZ5NJ3/qasOai+LpZtP840LJEPy4T0vSdgR4Jco2QdMXbo21Eo2tEcsYX3YQIDAQAB
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+      ZIPKIN_URL: ${ZIPKIN_URL}
     depends_on:
       - zipkin
       - discovery-server
@@ -160,19 +157,25 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-
-  # product-service
+  
+  ###  # product-service
   product-service:
     container_name: product-service
     build:
-      context: ./product-service/.
+      context: ../product-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
+      PRODUCT_ROUTER_BINDING_KEY: ${PRODUCT_ROUTER_BINDING_KEY}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - product-service-mongo
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -180,21 +183,28 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-
-  # order-service
+  
+  ###  # order-service
   order-service:
     container_name: order-service
     build:
-      context: ./order-service/.
+      context: ../order-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
+      ORDER_ROUTER_BINDING_KEY: ${ORDER_ROUTER_BINDING_KEY}
+      NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
+      NOTIFICATION_ROUTER_BINDING_KEY: ${NOTIFICATION_ROUTER_BINDING_KEY}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - order-service-mysql
-      - broker
       - zipkin
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -202,21 +212,26 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-
-  # inventory-service
+  #
+  #####  # inventory-service
   inventory-service:
     container_name: inventory-service
     build:
-      context: ./inventory-service/.
+      context: ../inventory-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
+      PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - inventory-service-mysql
-      - broker
       - zipkin
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -224,20 +239,27 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-
-  # notification-service
+  #
+  ####  # notification-service
   notification-service:
     container_name: notification-service
     build:
-      context: ./notification-service/.
+      context: ../notification-service/.
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
+      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - zipkin
-      - broker
       - discovery-server
-      - api-gateway
       - config-server
+      - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -247,32 +269,6 @@ services:
         max_attempts: 3
 
 
-  # prometheus
-  prometheus:
-    image: prom/prometheus:v2.43.0
-    container_name: prometheus
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - D:\docker-volumes\prometheus\prometheus.yml:/etc/prometheus/prometheus.yml
-
-  # grafana
-  grafana:
-    image: grafana/grafana-oss:9.4.7
-    container_name: grafana
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    links:
-      - prometheus:prometheus
-    volumes:
-      - D:\docker-volumes\grafana:/var/lib/grafana
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-
-  # elk stack
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
     container_name: elasticsearch
@@ -288,7 +284,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - ./volumes/elasticsearch:/usr/share/elasticsearch/data
+      - ../volumes/elastic/elasticsearch:/usr/share/elasticsearch/data
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.10
@@ -315,7 +311,7 @@ services:
       - "25826:25826"
       - "5044:5044"
     volumes:
-      - ./volumes/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ../volumes/elastic/logstash/pipeline:/usr/share/logstash/pipeline:ro
     depends_on:
       - elasticsearch
 
@@ -325,8 +321,33 @@ services:
     entrypoint: "filebeat -e -strict.perms=false"
 
     volumes:
-      - ./volumes/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ../volumes/elastic/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./volumes/filebeat/data:/usr/share/filebeat.data:rw
+      - ../volumes/elastic/filebeat/data:/usr/share/filebeat.data:rw
     user: root
+
+  #prometheus
+  prometheus:
+    image: prom/prometheus:v2.43.0
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../volumes/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # grafana
+  grafana:
+    image: grafana/grafana-oss:9.4.7
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    links:
+      - prometheus:prometheus
+    volumes:
+      - ../volumes/grafana:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
