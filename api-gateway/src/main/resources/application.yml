@@ -1,3 +1,6 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: api-gateway
@@ -57,5 +60,6 @@ management:
     web:
       exposure:
         include: "*"
-server:
-  port: 8082
+  endpoint:
+    health:
+      show-details: always

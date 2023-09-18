@@ -2,7 +2,7 @@
 version: '3'
 services:
 
-  # mysql database for order-service
+# mysql database for order-service
   order-service-mysql:
     container_name: order-service-mysql
     image: mysql:8.1.0
@@ -18,7 +18,7 @@ services:
       - ../volumes/scripts/order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
-#  # mysql database for inventory-service
+# mysql database for inventory-service
   inventory-service-mysql:
     container_name: inventory-service-mysql
     image: mysql:8.1.0
@@ -37,7 +37,7 @@ services:
       - ../volumes/scripts/inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
-#  # mongo database for product-service
+# mongo database for product-service
   product-service-mongo:
     container_name: product-service-mongo
     image: mongo:7.0.0
@@ -49,14 +49,14 @@ services:
     volumes:
       - ../volumes/product-service-mongo:/data/db
 
-  # zipkin server
+# zipkin server
   zipkin:
     container_name: zipkin
     image: openzipkin/zipkin
     ports:
       - '9411:9411'
 
-  # rabbitMQ
+# rabbitMQ
   rabbitmq-container:
     container_name: rabbitmq-container
     image: rabbitmq:3.12-management
@@ -93,27 +93,6 @@ services:
     ports:
       - '8761:8761'
 
-#  # config server
-  config-server:
-    container_name: config-server
-    build:
-      context: ../config-server/.
-    ports:
-      - '8888:8888'
-    depends_on:
-      - discovery-server
-    environment:
-      GIT_REPOSITORY: ${GIT_REPOSITORY}
-      GIT_USERNAME : ${GIT_USERNAME}
-      GIT_PASSWORD : ${GIT_PASSWORD}
-      DISCOVERY_SERVER_URL : ${DISCOVERY_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
-
 # admin-server
   admin-server:
     container_name: admin-server
@@ -134,7 +113,7 @@ services:
         condition: on-failure
         max_attempts: 3
 
-  # api gateway
+# api gateway
   api-gateway:
     container_name: api-gateway
     build:
@@ -158,7 +137,7 @@ services:
         condition: on-failure
         max_attempts: 3
 
-###  # product-service
+# product-service
   product-service:
     container_name: product-service
     build:
@@ -168,13 +147,9 @@ services:
       PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
       PRODUCT_ROUTER_BINDING_KEY: ${PRODUCT_ROUTER_BINDING_KEY}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - product-service-mongo
       - discovery-server
-      - config-server
       - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
@@ -184,7 +159,7 @@ services:
         condition: on-failure
         max_attempts: 3
 
-###  # order-service
+# order-service
   order-service:
     container_name: order-service
     build:
@@ -196,14 +171,10 @@ services:
       NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
       NOTIFICATION_ROUTER_BINDING_KEY: ${NOTIFICATION_ROUTER_BINDING_KEY}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - order-service-mysql
       - zipkin
       - discovery-server
-      - config-server
       - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
@@ -212,8 +183,8 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-#
-#####  # inventory-service
+
+# inventory-service
   inventory-service:
     container_name: inventory-service
     build:
@@ -223,14 +194,10 @@ services:
       ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
       PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - inventory-service-mysql
       - zipkin
       - discovery-server
-      - config-server
       - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"
@@ -239,8 +206,8 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-#
-####  # notification-service
+
+# notification-service
   notification-service:
     container_name: notification-service
     build:
@@ -252,13 +219,9 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - zipkin
       - discovery-server
-      - config-server
       - rabbitmq-container
     labels:
       collect_logs_with_filebeat: "true"

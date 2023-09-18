@@ -1,0 +1,17 @@
+spring:
+  rabbitmq:
+    host: rabbitmq-container
+
+  zipkin:
+    base-url: http://zipkin:9411
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/microservices
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:password@discovery-server:8761/eureka/

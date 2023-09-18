@@ -23,7 +23,6 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>notification-service</module>
-        <module>config-server</module>
         <module>admin-server</module>
     </modules>
 
@@ -32,7 +31,6 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-cloud.version>2021.0.2</spring-cloud.version>
-        <keycloak.version>15.0.2</keycloak.version>
         <logstash-logback-encoder.version>7.3</logstash-logback-encoder.version>
         <spring-boot-admin.version>2.7.4</spring-boot-admin.version>
     </properties>

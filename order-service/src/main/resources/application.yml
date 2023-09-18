@@ -1,8 +1,91 @@
+server:
+  port: 9803
+  servlet:
+    context-path: /order-service
+
 spring:
+  application:
+    name: order-service
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://order-service-mysql:3306/order-service
+    username: order-service
+    password: P@ssw0rd
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
+
   rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
     config:
       orderQueue: ${ORDER_CREATED_QUEUE:order_created_queue}
       orderRoutingKey: ${ORDER_ROUTER_BINDING_KEY:order_created_routing_key}
       notificationQueue: ${NOTIFICATION_QUEUE:notification_queue}
       notificationRoutingKey: ${NOTIFICATION_ROUTER_BINDING_KEY:notification_routing_key}
       topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/microservices
+
+  zipkin:
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      probability: 1.0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:password@localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  health:
+    circuit-breakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  timelimiter:
+    instances:
+      inventory:
+        timeout-duration: 5s
+
+  circuitbreaker:
+    instances:
+      inventory:
+        registerHealthIndicator: true
+        event-consumer-buffer-size: 10
+        sliding-window-type: count_based
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+  retry:
+    instances:
+      inventory:
+        max-attempts: 2
+        wait-duration: 15s
+
+feign:
+  circuitbreaker:
+    enabled: true
