@@ -2,7 +2,7 @@ eureka:
   username: ${EUREKA_USERNAME:eureka}
   password: ${EUREKA_PASSWORD:password}
   instance:
-    hostname: localhost
+    hostname: ${DISCOVERY_SERVER_HOST:localhost}
     prefer-ip-address: true
   client:
     register-with-eureka: false
@@ -10,9 +10,12 @@ eureka:
 server:
   port: 8761
 
-# actuator prometheus endpoint
+# actuator endpoint
 management:
   endpoints:
     web:
       exposure:
-        include: "prometheus"
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

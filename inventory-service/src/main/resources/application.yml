@@ -7,9 +7,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://inventory-service-mysql:3300/inventory-service
-    username: inventory-service
-    password: P@ssw0rd
+    url: jdbc:mysql://${INVENTORY_SERVICE_DB_URL:inventory-service-mysql:3300}/inventory-service
+    username: ${INVENTORY_SERVICE_DB_USERNAME:inventory-service}
+    password: ${INVENTORY_SERVICE_DB_PASSWORD:P@ssw0rd}
 
   jpa:
     hibernate:
@@ -19,17 +19,17 @@ spring:
         dialect: org.hibernate.dialect.MySQL5Dialect
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBIT_MQ_HOST:localhost}
+    port: ${RABBIT_MQ_PORT:5672}
+    username: ${RABBIT_MQ_USERNAME:guest}
+    password: ${RABBIT_MQ_PASSWORD:guest}
     config:
       orderQueue: ${ORDER_CREATED_QUEUE:order_created_queue}
       productQueue: ${PRODUCT_CREATED_QUEUE:product_created_queue}
       topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}
 
   zipkin:
-    base-url: http://localhost:9411
+    base-url: ${ZIPKIN_URL:http://localhost:9411}
   sleuth:
     sampler:
       probability: 1.0
@@ -37,7 +37,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka:password@localhost:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVER_URL:http://eureka:password@localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 

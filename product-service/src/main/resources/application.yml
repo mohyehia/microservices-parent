@@ -9,20 +9,20 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://product-service-mongo:27017/product-service
+      uri: mongodb://${MONGO_DB_URL:product-service-mongo:27017}/product-service
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBIT_MQ_HOST:localhost}
+    port: ${RABBIT_MQ_PORT:5672}
+    username: ${RABBIT_MQ_USERNAME:guest}
+    password: ${RABBIT_MQ_PASSWORD:guest}
     config:
       productQueue: ${PRODUCT_CREATED_QUEUE:product_created_queue}
       productRoutingQueue: ${PRODUCT_ROUTER_BINDING_KEY:product_created_routing_key}
       topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}
 
   zipkin:
-    base-url: http://localhost:9411
+    base-url: ${ZIPKIN_URL:http://localhost:9411}
   sleuth:
     sampler:
       probability: 1.0
@@ -31,12 +31,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/microservices
+          issuer-uri: ${IDENTITY_PROVIDER_ISSUER_URL:http://localhost:8080/realms/microservices}
 
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka:password@localhost:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVER_URL:http://eureka:password@localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 

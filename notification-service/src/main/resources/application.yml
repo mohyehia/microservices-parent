@@ -6,16 +6,16 @@ spring:
     name: notification-service
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBIT_MQ_HOST:localhost}
+    port: ${RABBIT_MQ_PORT:5672}
+    username: ${RABBIT_MQ_USERNAME:guest}
+    password: ${RABBIT_MQ_PASSWORD:guest}
     config:
       notificationQueue: ${NOTIFICATION_QUEUE:notification_queue}
       topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}
 
   zipkin:
-    base-url: http://localhost:9411
+    base-url: ${ZIPKIN_URL:http://localhost:9411}
   sleuth:
     sampler:
       probability: 1.0
@@ -23,7 +23,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka:password@localhost:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVER_URL:http://eureka:password@localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 

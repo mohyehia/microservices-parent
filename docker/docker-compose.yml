@@ -17,8 +17,8 @@ services:
       - ../volumes/order-service-mysql:/var/lib/mysql
       - ../volumes/scripts/order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
-  
-  #  # mysql database for inventory-service
+
+  # mysql database for inventory-service
   inventory-service-mysql:
     container_name: inventory-service-mysql
     image: mysql:8.1.0
@@ -36,11 +36,11 @@ services:
       - ../volumes/inventory-service-mysql:/var/lib/mysql
       - ../volumes/scripts/inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
-  
-  #  # mongo database for product-service
+
+  # mongo database for product-service
   product-service-mongo:
     container_name: product-service-mongo
-    image: mongo:7.0.0
+    image: mongo:7.0.1
     restart: unless-stopped
     ports:
       - '27017:27017'
@@ -57,12 +57,12 @@ services:
       - '9411:9411'
 
   # rabbitMQ
-  rabbitmq-container:
-    container_name: rabbitmq-container
+  rabbitmq:
+    container_name: rabbitmq
     image: rabbitmq:3.12-management
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBIT_MQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_MQ_PASSWORD}
     ports:
       - '5672:5672'
       - '15672:15672'
@@ -78,8 +78,8 @@ services:
     command:
       - 'start-dev'
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USERNAME}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     ports:
       - '8080:8080'
     volumes:
@@ -92,28 +92,9 @@ services:
       context: ../discovery-server/.
     ports:
       - '8761:8761'
-  
-  #  # config server
-  config-server:
-    container_name: config-server
-    build:
-      context: ../config-server/.
-    ports:
-      - '8888:8888'
-    depends_on:
-      - discovery-server
     environment:
-      GIT_REPOSITORY: ${GIT_REPOSITORY}
-      GIT_USERNAME : ${GIT_USERNAME}
-      GIT_PASSWORD : ${GIT_PASSWORD}
-      DISCOVERY_SERVER_URL : ${DISCOVERY_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 3
-  
+      DISCOVERY_SERVER_HOST: ${DISCOVERY_SERVER_HOST}
+
   # admin-server
   admin-server:
     container_name: admin-server
@@ -144,7 +125,6 @@ services:
     expose:
       - '8082'
     environment:
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
       DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
       ZIPKIN_URL: ${ZIPKIN_URL}
     depends_on:
@@ -157,25 +137,30 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-  
-  ###  # product-service
+
+  # product-service
   product-service:
     container_name: product-service
     build:
       context: ../product-service/.
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
       PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
       PRODUCT_ROUTER_BINDING_KEY: ${PRODUCT_ROUTER_BINDING_KEY}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      IDENTITY_PROVIDER_ISSUER_URL: ${IDENTITY_PROVIDER_ISSUER_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
     depends_on:
       - product-service-mongo
       - discovery-server
-      - config-server
-      - rabbitmq-container
+      - rabbitmq
+    ports:
+      - '9804:9804'
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -183,28 +168,35 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-  
-  ###  # order-service
+
+  # order-service
   order-service:
     container_name: order-service
     build:
       context: ../order-service/.
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      ORDER_SERVICE_DB_URL: ${ORDER_SERVICE_DB_URL}
+      ORDER_SERVICE_DB_USERNAME: ${ORDER_SERVICE_DB_USERNAME}
+      ORDER_SERVICE_DB_PASSWORD: ${ORDER_SERVICE_DB_PASSWORD}
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
       ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
       ORDER_ROUTER_BINDING_KEY: ${ORDER_ROUTER_BINDING_KEY}
       NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
       NOTIFICATION_ROUTER_BINDING_KEY: ${NOTIFICATION_ROUTER_BINDING_KEY}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      IDENTITY_PROVIDER_ISSUER_URL: ${IDENTITY_PROVIDER_ISSUER_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
     depends_on:
       - order-service-mysql
       - zipkin
       - discovery-server
-      - config-server
-      - rabbitmq-container
+      - rabbitmq
+    ports:
+      - '9803:9803'
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -212,26 +204,32 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-  #
-  #####  # inventory-service
+
+  # inventory-service
   inventory-service:
     container_name: inventory-service
     build:
       context: ../inventory-service/.
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      INVENTORY_SERVICE_DB_URL: ${INVENTORY_SERVICE_DB_URL}
+      INVENTORY_SERVICE_DB_USERNAME: ${INVENTORY_SERVICE_DB_USERNAME}
+      INVENTORY_SERVICE_DB_PASSWORD: ${INVENTORY_SERVICE_DB_PASSWORD}
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
       ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
       PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
     depends_on:
       - inventory-service-mysql
       - zipkin
       - discovery-server
-      - config-server
-      - rabbitmq-container
+      - rabbitmq
+    ports:
+      - '9801:9801'
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -239,27 +237,30 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
-  #
-  ####  # notification-service
+
+  # notification-service
   notification-service:
     container_name: notification-service
     build:
       context: ../notification-service/.
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
       NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
       TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
-      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
-      CONFIG_SERVER_USERNAME: ${CONFIG_SERVER_USERNAME}
-      CONFIG_SERVER_PASSWORD: ${CONFIG_SERVER_PASSWORD}
     depends_on:
       - zipkin
       - discovery-server
-      - config-server
-      - rabbitmq-container
+      - rabbitmq
+    ports:
+      - '9802:9802'
     labels:
       collect_logs_with_filebeat: "true"
       decode_log_event_to_json_object: "true"
@@ -267,6 +268,7 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 3
+
 
 
   elasticsearch:

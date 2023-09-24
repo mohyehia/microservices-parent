@@ -9,9 +9,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://order-service-mysql:3306/order-service
-    username: order-service
-    password: P@ssw0rd
+    url: jdbc:mysql://${ORDER_SERVICE_DB_URL:order-service-mysql:3306}/order-service
+    username: ${ORDER_SERVICE_DB_USERNAME:order-service}
+    password: ${ORDER_SERVICE_DB_PASSWORD:P@ssw0rd}
   jpa:
     hibernate:
       ddl-auto: none
@@ -20,10 +20,10 @@ spring:
         dialect: org.hibernate.dialect.MySQL5Dialect
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBIT_MQ_HOST:localhost}
+    port: ${RABBIT_MQ_PORT:5672}
+    username: ${RABBIT_MQ_USERNAME:guest}
+    password: ${RABBIT_MQ_PASSWORD:guest}
     config:
       orderQueue: ${ORDER_CREATED_QUEUE:order_created_queue}
       orderRoutingKey: ${ORDER_ROUTER_BINDING_KEY:order_created_routing_key}
@@ -35,10 +35,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/microservices
+          issuer-uri: ${IDENTITY_PROVIDER_ISSUER_URL:http://localhost:8080/realms/microservices}
 
   zipkin:
-    base-url: http://localhost:9411
+    base-url: ${ZIPKIN_URL:http://localhost:9411}
   sleuth:
     sampler:
       probability: 1.0
@@ -46,7 +46,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka:password@localhost:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVER_URL:http://eureka:password@localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
