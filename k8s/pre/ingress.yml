@@ -1,0 +1,57 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservices-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eureka.cloud.dev.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: discovery-server
+            pathType: Prefix
+            path: /
+    - host: keycloak.cloud.dev.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: keycloak
+            pathType: Prefix
+            path: /
+    - host: admin.cloud.dev.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: admin-server
+            pathType: Prefix
+            path: /
+    - host: rabbitmq.cloud.dev.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: rabbitmq
+            pathType: Prefix
+            path: /
+    - host: zipkin.cloud.dev.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: zipkin
+            pathType: Prefix
+            path: /
+    - host: api.cloud.dev.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: api-gateway
+            pathType: Prefix
+            path: /
