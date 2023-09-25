@@ -1,0 +1,78 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: inventory-service-db-sc
+provisioner: k8s.io/minikube-hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service-db
+spec:
+  clusterIP: None
+  selector:
+    app: inventory-service-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: inventory-service-db-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service-db
+  serviceName: 'inventory-service-db'
+  template:
+    metadata:
+      labels:
+        app: inventory-service-db
+    spec:
+      containers:
+        - name: inventory-service-db-ctr
+          image: mysql:8.1.0
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: inventoryServiceDatabaseName
+                  name: inventory-service-cm
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: inventoryServiceDBRootPassword
+                  name: inventory-service-secret
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: inventoryServiceDBUSer
+                  name: inventory-service-cm
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: inventoryServiceDBPassword
+                  name: inventory-service-secret
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: inventory-service-db-vol
+            - mountPath: /docker-entrypoint-initdb.d
+              name: inventory-service-init-db
+      volumes:
+        - name: inventory-service-init-db
+          configMap:
+            name: inventory-service-cm
+  volumeClaimTemplates:
+    - metadata:
+        name: inventory-service-db-vol
+      spec:
+        storageClassName: 'inventory-service-db-sc'
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

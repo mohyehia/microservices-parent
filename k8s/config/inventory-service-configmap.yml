@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventory-service-cm
+data:
+  inventoryServiceDatabaseName: "inventory-service"
+  inventoryServiceDBUSer: "inventory-service"
+  inventoryServiceDBURL: "inventory-service-db-sts-0.inventory-service-db"
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS `hibernate_sequence`
+    (
+        `next_val` bigint DEFAULT NULL
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+    
+    CREATE TABLE IF NOT EXISTS `inventory`
+    (
+        `ID`       bigint       NOT NULL AUTO_INCREMENT,
+        `SKU_CODE` varchar(200) NOT NULL,
+        `QUANTITY` int DEFAULT NULL,
+        PRIMARY KEY (`ID`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;

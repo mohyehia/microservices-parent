@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+        - name: product-service-ctr
+          image: mohyehia99/product-service:0.0.1
+          ports:
+            - containerPort: 9804
+          env:
+            - name: MONGO_DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: mongoDBURL
+                  name: product-service-cm
+            - name: RABBIT_MQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQHost
+                  name: common-cm
+            - name: RABBIT_MQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQPort
+                  name: common-cm
+            - name: RABBIT_MQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqUsername
+                  name: common-secrets
+            - name: RABBIT_MQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqPassword
+                  name: common-secrets
+            - name: PRODUCT_CREATED_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  key: productCreatedQueue
+                  name: common-cm
+            - name: PRODUCT_ROUTER_BINDING_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: productRouterBindingKey
+                  name: common-cm
+            - name: TOPIC_EXCHANGE
+              valueFrom:
+                configMapKeyRef:
+                  key: topicExchange
+                  name: common-cm
+            - name: ZIPKIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: zipkinURL
+                  name: common-cm
+            - name: DISCOVERY_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: discoveryServerURL
+                  name: common-cm
+            - name: IDENTITY_PROVIDER_ISSUER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: keycloakURL
+                  name: common-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+spec:
+  selector:
+    app: product-service
+  type: ClusterIP
+  ports:
+    - port: 9804
+      targetPort: 9804

@@ -1,0 +1,263 @@
+
+version: '3'
+services:
+
+  # mysql database for order-service
+  order-service-mysql:
+    container_name: order-service-mysql
+    image: mysql:8.1.0
+    environment:
+      MYSQL_DATABASE: order-service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: order-service
+      MYSQL_PASSWORD: P@ssw0rd
+    ports:
+      - '3306:3306'
+    volumes:
+      - ../volumes/order-service-mysql:/var/lib/mysql
+      - ../volumes/scripts/order-service-init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # mysql database for inventory-service
+  inventory-service-mysql:
+    container_name: inventory-service-mysql
+    image: mysql:8.1.0
+    environment:
+      MYSQL_DATABASE: inventory-service
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: inventory-service
+      MYSQL_PASSWORD: P@ssw0rd
+      MYSQL_TCP_PORT: 3300
+    ports:
+      - '3300:3300'
+    expose:
+      - '3300'
+    volumes:
+      - ../volumes/inventory-service-mysql:/var/lib/mysql
+      - ../volumes/scripts/inventory-service-init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  # mongo database for product-service
+  product-service-mongo:
+    container_name: product-service-mongo
+    image: mongo:7.0.1
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    expose:
+      - '27017'
+    volumes:
+      - ../volumes/product-service-mongo:/data/db
+
+  # zipkin server
+  zipkin:
+    container_name: zipkin
+    image: openzipkin/zipkin
+    ports:
+      - '9411:9411'
+
+  # rabbitMQ
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.12-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBIT_MQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_MQ_PASSWORD}
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:21.0.2
+    hostname: keycloak
+    command:
+      - 'start-dev'
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USERNAME}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - '8080:8080'
+    volumes:
+      - ../volumes/keycloak-data:/opt/keycloak/data
+
+  # discovery server
+  discovery-server:
+    container_name: discovery-server
+    image: mohyehia99/discovery-server:0.0.1
+    ports:
+      - '8761:8761'
+    environment:
+      DISCOVERY_SERVER_HOST: ${DISCOVERY_SERVER_HOST}
+
+  # admin-server
+  admin-server:
+    container_name: admin-server
+    image: mohyehia99/admin-server:0.0.1
+    environment:
+      ADMIN_SERVER_USERNAME: ${ADMIN_SERVER_USERNAME}
+      ADMIN_SERVER_PASSWORD: ${ADMIN_SERVER_PASSWORD}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+    ports:
+      - '9091:9091'
+    expose:
+      - 9091
+    depends_on:
+      - discovery-server
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # api gateway
+  api-gateway:
+    container_name: api-gateway
+    image: mohyehia99/api-gateway:0.0.1
+    ports:
+      - '8082:8082'
+    expose:
+      - '8082'
+    environment:
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+    depends_on:
+      - zipkin
+      - discovery-server
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # product-service
+  product-service:
+    container_name: product-service
+    image: mohyehia99/product-service:0.0.1
+    environment:
+      MONGO_DB_URL: ${MONGO_DB_URL}
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
+      PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
+      PRODUCT_ROUTER_BINDING_KEY: ${PRODUCT_ROUTER_BINDING_KEY}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      IDENTITY_PROVIDER_ISSUER_URL: ${IDENTITY_PROVIDER_ISSUER_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+    depends_on:
+      - product-service-mongo
+      - discovery-server
+      - rabbitmq
+    ports:
+      - '9804:9804'
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # order-service
+  order-service:
+    container_name: order-service
+    image: mohyehia99/order-service:0.0.1
+    environment:
+      ORDER_SERVICE_DB_URL: ${ORDER_SERVICE_DB_URL}
+      ORDER_SERVICE_DB_USERNAME: ${ORDER_SERVICE_DB_USERNAME}
+      ORDER_SERVICE_DB_PASSWORD: ${ORDER_SERVICE_DB_PASSWORD}
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
+      ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
+      ORDER_ROUTER_BINDING_KEY: ${ORDER_ROUTER_BINDING_KEY}
+      NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
+      NOTIFICATION_ROUTER_BINDING_KEY: ${NOTIFICATION_ROUTER_BINDING_KEY}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      IDENTITY_PROVIDER_ISSUER_URL: ${IDENTITY_PROVIDER_ISSUER_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+    depends_on:
+      - order-service-mysql
+      - zipkin
+      - discovery-server
+      - rabbitmq
+    ports:
+      - '9803:9803'
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # inventory-service
+  inventory-service:
+    container_name: inventory-service
+    image: mohyehia99/inventory-service:0.0.1
+    environment:
+      INVENTORY_SERVICE_DB_URL: ${INVENTORY_SERVICE_DB_URL}
+      INVENTORY_SERVICE_DB_USERNAME: ${INVENTORY_SERVICE_DB_USERNAME}
+      INVENTORY_SERVICE_DB_PASSWORD: ${INVENTORY_SERVICE_DB_PASSWORD}
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
+      ORDER_CREATED_QUEUE: ${ORDER_CREATED_QUEUE}
+      PRODUCT_CREATED_QUEUE: ${PRODUCT_CREATED_QUEUE}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+    depends_on:
+      - inventory-service-mysql
+      - zipkin
+      - discovery-server
+      - rabbitmq
+    ports:
+      - '9801:9801'
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  # notification-service
+  notification-service:
+    container_name: notification-service
+    image: mohyehia99/notification-service:0.0.1
+    environment:
+      RABBIT_MQ_HOST: ${RABBIT_MQ_HOST}
+      RABBIT_MQ_PORT: ${RABBIT_MQ_PORT}
+      RABBIT_MQ_USERNAME: ${RABBIT_MQ_USERNAME}
+      RABBIT_MQ_PASSWORD: ${RABBIT_MQ_PASSWORD}
+      NOTIFICATION_QUEUE: ${NOTIFICATION_QUEUE}
+      TOPIC_EXCHANGE: ${TOPIC_EXCHANGE}
+      ZIPKIN_URL: ${ZIPKIN_URL}
+      DISCOVERY_SERVER_URL: ${DISCOVERY_SERVER_URL}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER}
+    depends_on:
+      - zipkin
+      - discovery-server
+      - rabbitmq
+    ports:
+      - '9802:9802'
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3

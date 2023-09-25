@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: order-service-cm
+data:
+  orderServiceDatabaseName: "order-service"
+  orderServiceDBUSer: "order-service"
+  orderServiceDBURL: "order-service-db-sts-0.order-service-db"
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS `hibernate_sequence` (
+        `next_val` bigint DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+    CREATE TABLE IF NOT EXISTS `order_items` (
+                                                 `id` bigint NOT NULL,
+                                                 `price` decimal(19,2) DEFAULT NULL,
+        `product_code` varchar(255) DEFAULT NULL,
+        `quantity` int NOT NULL,
+        PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    
+    CREATE TABLE IF NOT EXISTS `orders` (
+                                            `id` bigint NOT NULL,
+                                            `order_number` varchar(255) DEFAULT NULL,
+        `username` varchar(255) NOT NULL,
+        PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    
+    CREATE TABLE IF NOT EXISTS `orders_order_items` (
+                                                        `order_id` bigint NOT NULL,
+                                                        `order_items_id` bigint NOT NULL,
+                                                        UNIQUE KEY `UK_9d47gapmi35omtannusv6btu3` (`order_items_id`),
+        KEY `FK3l8rktw0f4w5t6tift31e2d7c` (`order_id`),
+        CONSTRAINT `FK1ldyot20dlv6os5xhp0adi687` FOREIGN KEY (`order_items_id`) REFERENCES `order_items` (`id`),
+        CONSTRAINT `FK3l8rktw0f4w5t6tift31e2d7c` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

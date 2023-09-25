@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin-server-cm
+data:
+  adminServerUsername: "admin"
+  adminServerPassword: "admin"

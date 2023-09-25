@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-cm
+data:
+  rabbitMQHost: "rabbitmq-0.rabbitmq"
+  rabbitMQPort: "5672"
+  productCreatedQueue: "product_created_queue"
+  orderCreatedQueue: "order_created_queue"
+  notificationQueue: "notification_queue"
+  productRouterBindingKey: "product_created_routing_key"
+  orderRouterBindingKey: "order_created_routing_key"
+  notificationRouterBindingKey: "notification_routing_key"
+  topicExchange: "microservices_exchange"
+  discoveryServerURL: "http://eureka:password@discovery-server/eureka"
+  discoveryServerHost: "discovery-server"
+  zipkinURL: "http://zipkin:9411"
+  keycloakURL: "http://keycloak:8080/realms/microservices"

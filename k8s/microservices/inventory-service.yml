@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+        - name: inventory-service-ctr
+          image: mohyehia99/inventory-service:0.0.1
+          ports:
+            - containerPort: 9801
+          env:
+            - name: INVENTORY_SERVICE_DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: inventoryServiceDBURL
+                  name: inventory-service-cm
+            - name: INVENTORY_SERVICE_DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: inventoryServiceDBUSer
+                  name: inventory-service-cm
+            - name: INVENTORY_SERVICE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: inventoryServiceDBPassword
+                  name: inventory-service-secret
+            - name: RABBIT_MQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQHost
+                  name: common-cm
+            - name: RABBIT_MQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQPort
+                  name: common-cm
+            - name: RABBIT_MQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqUsername
+                  name: common-secrets
+            - name: RABBIT_MQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqPassword
+                  name: common-secrets
+            - name: ORDER_CREATED_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  key: orderCreatedQueue
+                  name: common-cm
+            - name: PRODUCT_CREATED_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  key: productCreatedQueue
+                  name: common-cm
+            - name: TOPIC_EXCHANGE
+              valueFrom:
+                configMapKeyRef:
+                  key: topicExchange
+                  name: common-cm
+            - name: ZIPKIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: zipkinURL
+                  name: common-cm
+            - name: DISCOVERY_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: discoveryServerURL
+                  name: common-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory-service
+  ports:
+    - port: 9801
+      targetPort: 9801

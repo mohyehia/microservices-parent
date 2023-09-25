@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service-ctr
+          image: mohyehia99/order-service:0.0.1
+          ports:
+            - containerPort: 9803
+          env:
+            - name: ORDER_SERVICE_DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: orderServiceDBURL
+                  name: order-service-cm
+            - name: ORDER_SERVICE_DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: orderServiceDBUSer
+                  name: order-service-cm
+            - name: ORDER_SERVICE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: orderServiceDBPassword
+                  name: order-service-secret
+            - name: RABBIT_MQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQHost
+                  name: common-cm
+            - name: RABBIT_MQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQPort
+                  name: common-cm
+            - name: RABBIT_MQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqUsername
+                  name: common-secrets
+            - name: RABBIT_MQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqPassword
+                  name: common-secrets
+            - name: ORDER_CREATED_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  key: orderCreatedQueue
+                  name: common-cm
+            - name: ORDER_ROUTER_BINDING_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: orderRouterBindingKey
+                  name: common-cm
+            - name: NOTIFICATION_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  key: notificationQueue
+                  name: common-cm
+            - name: NOTIFICATION_ROUTER_BINDING_KEY
+              valueFrom:
+                configMapKeyRef:
+                  key: notificationRouterBindingKey
+                  name: common-cm
+            - name: TOPIC_EXCHANGE
+              valueFrom:
+                configMapKeyRef:
+                  key: topicExchange
+                  name: common-cm
+            - name: ZIPKIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: zipkinURL
+                  name: common-cm
+            - name: DISCOVERY_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: discoveryServerURL
+                  name: common-cm
+            - name: IDENTITY_PROVIDER_ISSUER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: keycloakURL
+                  name: common-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  type: ClusterIP
+  selector:
+    app: order-service
+  ports:
+    - port: 9803
+      targetPort: 9803

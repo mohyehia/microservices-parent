@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-server
+  template:
+    metadata:
+      labels:
+        app: admin-server
+    spec:
+      containers:
+        - name: admin-server-ctr
+          image: mohyehia99/admin-server:0.0.1
+          ports:
+            - containerPort: 9091
+          env:
+            - name: ADMIN_SERVER_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  key: adminServerUsername
+                  name: admin-server-cm
+            - name: ADMIN_SERVER_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: adminServerPassword
+                  name: admin-server-cm
+            - name: DISCOVERY_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: discoveryServerURL
+                  name: common-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-server
+spec:
+  selector:
+    app: admin-server
+  type: ClusterIP
+  ports:
+    - port: 9091
+      targetPort: 9091

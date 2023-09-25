@@ -1,0 +1,78 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: order-service-db-sc
+provisioner: k8s.io/minikube-hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service-db
+spec:
+  clusterIP: None
+  selector:
+    app: order-service-db
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: order-service-db-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service-db
+  serviceName: 'order-service-db'
+  template:
+    metadata:
+      labels:
+        app: order-service-db
+    spec:
+      containers:
+        - name: order-service-db-ctr
+          image: mysql:8.1.0
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  key: orderServiceDatabaseName
+                  name: order-service-cm
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: orderServiceDBUSer
+                  name: order-service-cm
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: orderServiceDBRootPassword
+                  name: order-service-secret
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: orderServiceDBPassword
+                  name: order-service-secret
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: order-service-db-vol
+            - mountPath: /docker-entrypoint-initdb.d
+              name: order-service-init-db
+      volumes:
+        - name: order-service-init-db
+          configMap:
+            name: order-service-cm
+  volumeClaimTemplates:
+    - metadata:
+        name: order-service-db-vol
+      spec:
+        storageClassName: 'order-service-db-sc'
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service-ctr
+          image: mohyehia99/notification-service:0.0.1
+          ports:
+            - containerPort: 9802
+          env:
+            - name: RABBIT_MQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQHost
+                  name: common-cm
+            - name: RABBIT_MQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: rabbitMQPort
+                  name: common-cm
+            - name: RABBIT_MQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqUsername
+                  name: common-secrets
+            - name: RABBIT_MQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: rabbitmqPassword
+                  name: common-secrets
+            - name: NOTIFICATION_QUEUE
+              valueFrom:
+                configMapKeyRef:
+                  key: notificationQueue
+                  name: common-cm
+            - name: TOPIC_EXCHANGE
+              valueFrom:
+                configMapKeyRef:
+                  key: topicExchange
+                  name: common-cm
+            - name: ZIPKIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: zipkinURL
+                  name: common-cm
+            - name: DISCOVERY_SERVER_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: discoveryServerURL
+                  name: common-cm
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  key: twilioAccountSid
+                  name: notification-service-secret
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: twilioAuthToken
+                  name: notification-service-secret
+            - name: TWILIO_PHONE_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  key: twilioPhoneNumber
+                  name: notification-service-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+spec:
+  type: ClusterIP
+  selector:
+    app: notification-service
+  ports:
+    - port: 9802
+      targetPort: 9802
