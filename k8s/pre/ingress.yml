@@ -13,6 +13,8 @@ spec:
           - backend:
               service:
                 name: discovery-server
+                port:
+                  number: 80
             pathType: Prefix
             path: /
     - host: keycloak.cloud.dev.com
@@ -21,6 +23,8 @@ spec:
           - backend:
               service:
                 name: keycloak
+                port:
+                  number: 8080
             pathType: Prefix
             path: /
     - host: admin.cloud.dev.com
@@ -29,6 +33,8 @@ spec:
           - backend:
               service:
                 name: admin-server
+                port:
+                  number: 9091
             pathType: Prefix
             path: /
     - host: rabbitmq.cloud.dev.com
@@ -37,6 +43,8 @@ spec:
           - backend:
               service:
                 name: rabbitmq
+                port:
+                  number: 15672
             pathType: Prefix
             path: /
     - host: zipkin.cloud.dev.com
@@ -45,6 +53,8 @@ spec:
           - backend:
               service:
                 name: zipkin
+                port:
+                  number: 9411
             pathType: Prefix
             path: /
     - host: api.cloud.dev.com
@@ -53,5 +63,7 @@ spec:
           - backend:
               service:
                 name: api-gateway
+                port:
+                  number: 8082
             pathType: Prefix
             path: /
