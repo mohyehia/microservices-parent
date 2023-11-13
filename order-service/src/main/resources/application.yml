@@ -37,12 +37,6 @@ spring:
         jwt:
           issuer-uri: ${IDENTITY_PROVIDER_ISSUER_URL:http://localhost:8080/realms/microservices}
 
-  zipkin:
-    base-url: ${ZIPKIN_URL:http://localhost:9411}
-  sleuth:
-    sampler:
-      probability: 1.0
-
 eureka:
   client:
     service-url:
@@ -61,6 +55,14 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
 
 resilience4j:
   timelimiter:

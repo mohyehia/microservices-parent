@@ -1,8 +1,8 @@
 package com.moh.yehia.orderservice.model.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 
-import javax.persistence.*;
 import java.util.List;
 
 @Entity

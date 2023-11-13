@@ -21,12 +21,6 @@ spring:
       productRoutingQueue: ${PRODUCT_ROUTER_BINDING_KEY:product_created_routing_key}
       topicExchange: ${TOPIC_EXCHANGE:microservices_exchange}
 
-  zipkin:
-    base-url: ${ZIPKIN_URL:http://localhost:9411}
-  sleuth:
-    sampler:
-      probability: 1.0
-
   security:
     oauth2:
       resourceserver:
@@ -48,3 +42,11 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
