@@ -18,7 +18,8 @@ It provides a foundation and common configurations to build scalable and resilie
 The Microservices Parent project is a comprehensive repository that enables developers to quickly bootstrap and develop microservices-based applications. It promotes modularity, scalability, and maintainability through the use of microservice architectural patterns and industry-standard technologies.
 
 ### Technologies used
-* Spring Boot
+* Spring Boot 3
+* Java 17
 * Spring Security Oauth2
 * Spring Cloud Gateway
 * Spring Cloud Config
